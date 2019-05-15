@@ -5,6 +5,7 @@
 #include <linux/smp.h>
 
 #include <asm/ras.h>
+#include <ras/ras_event.h>
 
 void arch_arm_ras_report_error(void)
 {
@@ -50,6 +51,8 @@ void arch_arm_ras_report_error(void)
 			pr_err("CPU%u: ERR%uMISC1: 0x%llx\n", cpu_num, i,
 			       regs.err_misc1);
 		}
+
+		trace_arm_ras_ext_event(0, cpu_num, &regs);
 
 		/*
 		 * In the future, we will treat UER conditions as potentially
