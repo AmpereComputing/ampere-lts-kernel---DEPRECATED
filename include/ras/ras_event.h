@@ -339,6 +339,52 @@ TRACE_EVENT(aer_event,
 );
 
 /*
+ * ARM RAS Extension Events Report
+ *
+ * This event is generated when an error reported by the ARM RAS extension
+ * hardware is detected.
+ */
+
+#ifdef CONFIG_ARM64
+#include <asm/ras.h>
+TRACE_EVENT(arm_ras_ext_event,
+
+	TP_PROTO(u8 type, u32 id, struct ras_ext_regs *regs),
+
+	TP_ARGS(type, id, regs),
+
+	TP_STRUCT__entry(
+		__field(u8,  type)
+		__field(u32, id)
+		__field(u64, err_fr)
+		__field(u64, err_ctlr)
+		__field(u64, err_status)
+		__field(u64, err_addr)
+		__field(u64, err_misc0)
+		__field(u64, err_misc1)
+	),
+
+	TP_fast_assign(
+		__entry->type = type;
+		__entry->id = id;
+		__entry->err_fr = regs->err_fr;
+		__entry->err_ctlr = regs->err_ctlr;
+		__entry->err_status = regs->err_status;
+		__entry->err_addr = regs->err_addr;
+		__entry->err_misc0 = regs->err_misc0;
+		__entry->err_misc1 = regs->err_misc1;
+	),
+
+	TP_printk("type: %d; id: %d; ERR_FR: %llx; ERR_CTLR: %llx; "
+		  "ERR_STATUS: %llx; ERR_ADDR: %llx; ERR_MISC0: %llx; "
+		  "ERR_MISC1: %llx",
+		  __entry->type, __entry->id, __entry->err_fr,
+		  __entry->err_ctlr, __entry->err_status, __entry->err_addr,
+		  __entry->err_misc0, __entry->err_misc1)
+);
+#endif
+
+/*
  * memory-failure recovery action result event
  *
  * unsigned long pfn -	Page Frame Number of the corrupted page
