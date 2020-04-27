@@ -3753,9 +3753,7 @@ err_reset_pci_ops: __maybe_unused;
 static void __iomem *arm_smmu_ioremap(struct device *dev, resource_size_t start,
 				      resource_size_t size)
 {
-	struct resource res = DEFINE_RES_MEM(start, size);
-
-	return devm_ioremap_resource(dev, &res);
+	return devm_ioremap(dev, start, size);
 }
 
 static int arm_smmu_device_probe(struct platform_device *pdev)
