@@ -636,8 +636,10 @@ static void armv8pmu_enable_event(struct perf_event *event)
 	armv8pmu_enable_event_irq(event);
 
 	/*
-	 * Enable counter
+	 * Enable counter. Make sure event configuration register writes are
+	 * visible before we enable the counter.
 	 */
+	isb();
 	armv8pmu_enable_event_counter(event);
 
 	raw_spin_unlock_irqrestore(&events->pmu_lock, flags);
