@@ -871,6 +871,13 @@ config LEDS_ACER_A500
 	  This option enables support for the Power Button LED of
 	  Acer Iconia Tab A500.
 
+config LEDS_ALTRA_SPCI
+	bool "Altra LED support via SPCI"
+	depends on ARM64 && ACPI
+	help
+	  If you say yes here, you get support for Altra SPCI LED
+	  When in doubt, say N.
+
 source "drivers/leds/blink/Kconfig"
 
 comment "Flash and Torch LED drivers"
