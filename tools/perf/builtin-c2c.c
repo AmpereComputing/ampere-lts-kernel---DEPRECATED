@@ -1324,23 +1324,26 @@ node_entry(struct perf_hpp_fmt *fmt __maybe_unused, struct perf_hpp *hpp,
 			ret = scnprintf(hpp->buf, hpp->size, "%2d{%2d ", node, num);
 			advance_hpp(hpp, ret);
 
-		#define DISPLAY_HITM(__h)						\
-			if (c2c_he->stats.__h> 0) {					\
+		#define DISPLAY_METRICS(val, sum)					\
+		{									\
+			if ((sum) > 0) {						\
 				ret = scnprintf(hpp->buf, hpp->size, "%5.1f%% ",	\
-						percent(stats->__h, c2c_he->stats.__h));\
+						percent((val), (sum)));			\
 			} else {							\
 				ret = scnprintf(hpp->buf, hpp->size, "%6s ", "n/a");	\
-			}
+			}								\
+		}
 
 			switch (c2c.display) {
 			case DISPLAY_RMT:
-				DISPLAY_HITM(rmt_hitm);
+				DISPLAY_METRICS(stats->rmt_hitm, c2c_he->stats.rmt_hitm);
 				break;
 			case DISPLAY_LCL:
-				DISPLAY_HITM(lcl_hitm);
+				DISPLAY_METRICS(stats->lcl_hitm, c2c_he->stats.lcl_hitm);
 				break;
 			case DISPLAY_TOT:
-				DISPLAY_HITM(tot_hitm);
+				DISPLAY_METRICS(stats->tot_hitm, c2c_he->stats.tot_hitm);
+				break;
 			default:
 				break;
 			}
