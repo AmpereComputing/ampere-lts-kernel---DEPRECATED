@@ -2151,24 +2151,27 @@ static bool he__display(struct hist_entry *he, struct c2c_stats *stats)
 
 	c2c_he = container_of(he, struct c2c_hist_entry, he);
 
-#define FILTER_HITM(__h)						\
-	if (stats->__h) {						\
-		ld_dist = ((double)c2c_he->stats.__h / stats->__h);	\
+#define FILTER_DISPLAY(val, sum)					\
+{									\
+	if ((sum)) {							\
+		ld_dist = ((double)(val) / (sum));			\
 		if (ld_dist < DISPLAY_LINE_LIMIT)			\
 			he->filtered = HIST_FILTER__C2C;		\
 	} else {							\
 		he->filtered = HIST_FILTER__C2C;			\
-	}
+	}								\
+}
 
 	switch (c2c.display) {
 	case DISPLAY_LCL:
-		FILTER_HITM(lcl_hitm);
+		FILTER_DISPLAY(c2c_he->stats.lcl_hitm, stats->lcl_hitm);
 		break;
 	case DISPLAY_RMT:
-		FILTER_HITM(rmt_hitm);
+		FILTER_DISPLAY(c2c_he->stats.rmt_hitm, stats->rmt_hitm);
 		break;
 	case DISPLAY_TOT:
-		FILTER_HITM(tot_hitm);
+		FILTER_DISPLAY(c2c_he->stats.tot_hitm, stats->tot_hitm);
+		break;
 	default:
 		break;
 	}
