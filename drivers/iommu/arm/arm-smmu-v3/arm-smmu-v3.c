@@ -955,8 +955,7 @@ static void arm_smmu_write_cd_l1_desc(__le64 *dst,
 	WRITE_ONCE(*dst, cpu_to_le64(val));
 }
 
-static __le64 *arm_smmu_get_cd_ptr(struct arm_smmu_domain *smmu_domain,
-				   u32 ssid)
+__le64 *arm_smmu_get_cd_ptr(struct arm_smmu_domain *smmu_domain, u32 ssid)
 {
 	__le64 *l1ptr;
 	unsigned int idx;
@@ -981,6 +980,7 @@ static __le64 *arm_smmu_get_cd_ptr(struct arm_smmu_domain *smmu_domain,
 	idx = ssid & (CTXDESC_L2_ENTRIES - 1);
 	return l1_desc->l2ptr + idx * CTXDESC_CD_DWORDS;
 }
+EXPORT_SYMBOL_GPL(arm_smmu_get_cd_ptr);
 
 int arm_smmu_write_ctx_desc(struct arm_smmu_domain *smmu_domain, int ssid,
 			    struct arm_smmu_ctx_desc *cd)
@@ -2012,7 +2012,7 @@ static int arm_smmu_domain_finalise(struct iommu_domain *domain,
 	return 0;
 }
 
-static __le64 *arm_smmu_get_step_for_sid(struct arm_smmu_device *smmu, u32 sid)
+__le64 *arm_smmu_get_step_for_sid(struct arm_smmu_device *smmu, u32 sid)
 {
 	__le64 *step;
 	struct arm_smmu_strtab_cfg *cfg = &smmu->strtab_cfg;
@@ -2033,6 +2033,7 @@ static __le64 *arm_smmu_get_step_for_sid(struct arm_smmu_device *smmu, u32 sid)
 
 	return step;
 }
+EXPORT_SYMBOL_GPL(arm_smmu_get_step_for_sid);
 
 static void arm_smmu_install_ste_for_dev(struct arm_smmu_master *master)
 {
