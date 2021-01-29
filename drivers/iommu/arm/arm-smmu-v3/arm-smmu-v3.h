@@ -722,4 +722,12 @@ static inline int arm_smmu_master_disable_sva(struct arm_smmu_master *master)
 	return -ENODEV;
 }
 #endif /* CONFIG_ARM_SMMU_V3_SVA */
+
+#ifdef CONFIG_ARM_SMMU_V3_DEBUGFS
+void arm_smmu_debugfs_init(void);
+void arm_smmu_debugfs_uninit(void);
+#else
+static inline void arm_smmu_debugfs_init(void) {}
+static inline void arm_smmu_debugfs_uninit(void) {}
+#endif /* CONFIG_ARM_SMMU_V3_DEBUGFS */
 #endif /* _ARM_SMMU_V3_H */

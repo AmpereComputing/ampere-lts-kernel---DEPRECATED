@@ -3596,6 +3596,8 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
 		return ret;
 	}
 
+	arm_smmu_debugfs_init();
+
 	return arm_smmu_set_bus_ops(&arm_smmu_ops);
 }
 
@@ -3604,6 +3606,7 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
 	struct arm_smmu_device *smmu = platform_get_drvdata(pdev);
 
 	arm_smmu_set_bus_ops(NULL);
+	arm_smmu_debugfs_uninit();
 	iommu_device_unregister(&smmu->iommu);
 	iommu_device_sysfs_remove(&smmu->iommu);
 	arm_smmu_device_disable(smmu);
