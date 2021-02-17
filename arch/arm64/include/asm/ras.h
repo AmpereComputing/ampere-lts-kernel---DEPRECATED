@@ -25,6 +25,9 @@
 #define ERR_FR_8B_CEC		BIT(1)
 #define ERR_FR_16B_CEC		BIT(2)
 
+#define ARM_N1_MISC0_UNIT_MASK	0xf
+#define ARM_N1_UNIT_L2_TLB	0x2
+
 struct ras_ext_regs {
 	u64 err_fr;
 	u64 err_ctlr;
