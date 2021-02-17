@@ -52,6 +52,22 @@ void arch_arm_ras_report_error(void)
 			       regs.err_misc1);
 		}
 
+		/*
+		 * Workaround for ARM N1 errata where transient single-bit
+		 * error in the MMU TC RAM might cause corruption. Treat
+		 * these CEs as uncontainable UEs.
+		 */
+		if (i == 0 &&
+		    ((regs.err_status >> ERR_STATUS_CE_SHIFT) & ERR_STATUS_CE_MASK) == 0x2 &&
+		    (regs.err_misc0 & ARM_N1_MISC0_UNIT_MASK) == ARM_N1_UNIT_L2_TLB) {
+			pr_err("Upgrading L2 TLB CE to UC\n");
+			regs.err_status &= ~(ERR_STATUS_CE_MASK);
+			regs.err_status |= ERR_STATUS_UE;
+			regs.err_status &= ~(ERR_STATUS_UET_MASK);
+			pr_err("CPU%u: Upgraded ERR%uSTATUS: 0x%llx\n", cpu_num, i,
+			       regs.err_status);
+		}
+
 		trace_arm_ras_ext_event(0, cpu_num, &regs);
 
 		/*
