@@ -21,6 +21,7 @@ obj-$(CONFIG_QCOM_SCM)		+= qcom_scm.o qcom_scm-smc.o qcom_scm-legacy.o
 obj-$(CONFIG_TI_SCI_PROTOCOL)	+= ti_sci.o
 obj-$(CONFIG_TRUSTED_FOUNDATIONS) += trusted_foundations.o
 obj-$(CONFIG_TURRIS_MOX_RWTM)	+= turris-mox-rwtm.o
+obj-$(CONFIG_ALTRA_CPUECTLR_EL1)	+= altra_cpuectlr_el1.o
 
 obj-y				+= arm_scmi/
 obj-y				+= broadcom/
