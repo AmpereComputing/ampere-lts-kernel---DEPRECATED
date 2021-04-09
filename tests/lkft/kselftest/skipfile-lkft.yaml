@@ -1,0 +1,391 @@
+# This skipfile is consumable using skipgen
+# (https://github.com/Linaro/skipgen), included in this repo in
+# /automated/bin/<arch>/skipgen.
+#
+# reason:
+#   Please provide a human readable explanation of the reason for the skip.
+# url:
+#   A url referencing the issue. Often a link to the bug. Only one url may be
+#   specified.
+# environments:
+#   Should be 'production', 'staging', or 'all' for both. Our
+#   staging environment contains a very minimal skiplist. Only tests which make
+#   testing unstable should include staging.
+# boards:
+#   Should match a list of board names, or 'all' to include all boards.
+# branches:
+#   Should match a list of branch names, or 'all' to include all branches.
+# tests:
+#   List of tests to skip
+
+skiplist:
+
+  - reason: >
+      LKFT: linux-next: x15: kselftest: ftracetest hangs forever
+      LKFT: linux-mainline: kernel panic on X15 when running ftrace kseltest
+      https://bugs.linaro.org/show_bug.cgi?id=3304
+    url: https://bugs.linaro.org/show_bug.cgi?id=3297
+    environments: all
+    boards: all
+    branches:
+      - next
+      - mainline
+      - 5.11
+      - 5.10
+      - 5.9
+      - 5.8
+      - 5.7
+      - 5.6
+      - 5.4
+      - 4.19
+      - 4.14
+      - 4.9
+      - 4.4
+      - master
+      - linux-5.8.y
+      - linux-5.7.y
+      - linux-5.6.y
+      - linux-5.4.y
+      - linux-4.19.y
+      - linux-4.14.y
+      - linux-4.9.y
+      - linux-4.4.y
+      - v5.4-rt
+      - v4.19-rt
+      - v4.14-rt
+      - v4.9-rt
+      - v4.4-rt
+    tests:
+      - ftrace:ftracetest
+
+  - reason: "LKFT: linux-next: kselftest: breakpoint_test_arm64 build failed"
+    url: https://bugs.linaro.org/show_bug.cgi?id=3208
+    environments: all
+    boards:
+      - dragonboard-410c
+      - hi6220-hikey
+      - juno-r2
+      - qemu_arm64
+      - x15
+      - nxp-ls2088
+    branches: all
+    tests:
+      - breakpoints:breakpoint_test_arm64
+
+  - reason:
+    url:
+    environments: all
+    boards: all
+    branches: all
+    tests:
+      - breakpoints:step_after_suspend_test
+
+  - reason:
+    url:
+    environments: all
+    boards: all
+    branches: all
+    tests:
+      - breakpoints:breakpoint_test
+
+  - reason:
+    url:
+    environments: all
+    boards:
+      - qemu_arm
+      - qemu_arm64
+    branches: all
+    tests:
+      - mqueue:mq_open_tests
+      - mqueue:mq_perf_tests
+
+  - reason:
+      mq_perf_tests runs long so skipping
+    url:
+    environments: all
+    boards:
+      - dragonboard-410c
+      - hi6220-hikey
+      - juno-r2
+      - x15
+      - nxp-ls2088
+    branches: all
+    tests:
+      - mqueue:mq_perf_tests
+
+  - reason: >
+      LKFT: Kselftest: rseq: Warning: file basic_test is not executable
+    url: https://bugs.linaro.org/show_bug.cgi?id=3923
+    environments: all
+    boards:
+      - dragonboard-410c
+      - hi6220-hikey
+      - juno-r2
+      - qemu_arm64
+      - qemu_arm
+      - x15
+      - nxp-ls2088
+    branches:
+      - all
+    tests:
+      - rseq:run_param_test.sh
+
+  - reason: >
+      LKFT: next: bpf: test_kmod.sh hangs on all devices
+    url: https://bugs.linaro.org/show_bug.cgi?id=4006
+    environments: all
+    boards: all
+    branches:
+      - mainline
+    tests:
+      - kmod:test_kmod.sh
+
+  - reason: >
+      net: udpgro.sh hangs on i386 running next
+    url: https://bugs.linaro.org/show_bug.cgi?id=4078
+    environments: all
+    boards:
+      - i386
+    branches:
+      - next
+      - mainline
+    tests:
+      - net:udpgro.sh
+
+  - reason: >
+      net: xfrm_policy.sh hangs on i386 running next
+    url: https://bugs.linaro.org/show_bug.cgi?id=5342
+    environments: all
+    boards:
+      - i386
+    branches: all
+    tests:
+      - net:xfrm_policy.sh
+
+  - reason: >
+      net: run_afpackettests hangs on hikey running 4.19 mainline
+    url: https://bugs.linaro.org/show_bug.cgi?id=4049
+    environments: all
+    boards: all
+    branches:
+      - mainline
+    tests:
+      - net:run_afpackettests
+
+  - reason: >
+      proc: proc-pid-vm hangs on x86_64 running next
+    url: https://bugs.linaro.org/show_bug.cgi?id=5332
+    environments: all
+    boards:
+      - qemu_x86_64
+      - x86
+    branches: all
+    tests:
+      - proc:proc-pid-vm
+
+  - reason: >
+      LKFT: arm64/arm: selftest sync_test hangs on 4.9
+    url: https://bugs.linaro.org/show_bug.cgi?id=4080
+    environments: production
+    boards:
+      - dragonboard-410c
+      - hi6220-hikey
+      - juno-r2
+      - qemu_arm64
+      - x15
+      - qemu_arm
+      - nxp-ls2088
+    branches:
+      - 4.9
+      - linux-4.9.y
+      - v4.9-rt
+    tests:
+      - sync:sync_test
+
+  - reason: >
+      LKFT: next: next: msg_zerocopy.sh hangs on all devices
+    url: TBD
+    environments: all
+    boards: all
+    branches:
+      - next
+    tests:
+      - net:msg_zerocopy.sh
+
+  - reason: >
+      LKFT: next: next: zram.sh hangs on all devices
+    url: TBD
+    environments: all
+    boards: all
+    branches:
+      - next
+    tests:
+      - zram:zram.sh
+
+  - reason: >
+      LKFT: next: test_btf hangs on all devices
+    url: TBD
+    environments: all
+    boards: all
+    branches:
+      - next
+      - mainline
+      - default
+      - master
+    tests:
+      - bpf:test_btf
+
+  - reason: >
+      LKFT: 4.19: test_progs hangs on all devices
+    url: TBD
+    environments: all
+    boards:
+      - dragonboard-410c
+      - hi6220-hikey
+      - juno-r2
+      - qemu_arm64
+      - nxp-ls2088
+    branches:
+      - 4.19
+      - linux-4.19.y
+      - v4.19-rt
+    tests:
+      - bpf:test_progs
+
+  - reason: >
+      Newly added selftests netfilter nft_nat.sh hangs on x86_64.
+      x86_64 is using NFS root file system the net and netfilter tests performing
+      network interfaces up and down causing network failure and system hang.
+    url: https://bugs.linaro.org/show_bug.cgi?id=5337
+    environments: all
+    boards:
+      - qemu_x86_64
+      - x86
+      - i386
+    branches:
+      - all
+    tests:
+      - netfilter:nft_nat.sh
+
+  - reason: >
+      Newly added test case selftests netfilter conntrack_icmp_related.sh hangs on qemu_x86_64.
+    url: https://bugs.linaro.org/show_bug.cgi?id=5338
+    environments: all
+    boards:
+      - qemu_x86_64
+      - x86
+      - i386
+    branches:
+      - all
+    tests:
+      - netfilter:conntrack_icmp_related.sh
+
+  - reason: >
+      next: i386: selftests net rtnetlink.sh test hangs intermittently
+    url: https://bugs.linaro.org/show_bug.cgi?id=5339
+    environments: all
+    boards:
+      - all
+    branches:
+      - all
+    tests:
+      - net:rtnetlink.sh
+
+  - reason: >
+      x86_64 is using NFS root file system the net and netfilter tests performing
+      network interfaces up and down causing network failure and system hang.
+    url: https://bugs.linaro.org/show_bug.cgi?id=5341
+    environments: all
+    boards:
+      - all
+    branches:
+      - all
+    tests:
+      - netfilter:nft_trans_stress.sh
+      - netfilter:bridge_brouter.sh
+      - netfilter:nft_flowtable.sh
+  - reason: >
+      pidfd: pidfd_wait hangs on linux next on all devices
+      pidfd_wait.c:208:wait_nonblock:Expected sys_waitid(P_PIDFD, pidfd, &info, WSTOPPED, NULL) (-1) == 0 (0)
+      wait_nonblock: Test terminated by assertion
+    url: https://bugs.linaro.org/show_bug.cgi?id=5680
+    environments: all
+    boards:
+      - all
+    branches:
+      - all
+    tests:
+      - pidfd:pidfd_wait
+  - reason: >
+      ptrace vmaccess hangs on all devices on stable rc 4.19 branch and lower
+      kernel versions
+    url: https://bugs.linaro.org/show_bug.cgi?id=5683
+    environments: all
+    boards:
+      - all
+    branches:
+      - 5.4
+      - 4.4
+      - 4.9
+      - 4.14
+      - 4.19
+      - linux-4.4.y
+      - linux-4.9.y
+      - linux-4.14.y
+      - linux-4.19.y
+      - v4.4-rt
+      - v4.9-rt
+      - v4.14-rt
+      - v4.19-rt
+    tests:
+      - ptrace:vmaccess
+  - reason: >
+      net fib_nexthops.sh test cases hangs on nfs mounted devices
+    url: https://bugs.linaro.org/show_bug.cgi?id=5725
+    environments: all
+    boards:
+      - i386
+      - x86
+      - juno-r2
+    branches:
+      - all
+    tests:
+      - net:fib_nexthops.sh
+  - reason: >
+      vm: run_vmtests hangs on arm64 juno-r2, db410c and hikey
+    url: https://bugs.linaro.org/show_bug.cgi?id=5728
+    environments: all
+    boards:
+      - dragonboard-410c
+      - hi6220-hikey
+      - juno-r2
+    branches:
+      - all
+    tests:
+      - vm:run_vmtests
+  - reason: >
+      kvm: kvm_create_max_vcpus hang on arm64 devices for stable rc 5.4 and below
+    url: https://bugs.linaro.org/show_bug.cgi?id=5729
+    environments: all
+    boards:
+      - dragonboard-410c
+      - hi6220-hikey
+      - juno-r2
+    branches:
+      - 5.4
+      - 4.19
+      - 4.14
+      - 4.9
+      - 4.4
+      - linux-5.4.y
+      - linux-4.19.y
+      - linux-4.14.y
+      - linux-4.9.y
+      - linux-4.4.y
+      - v5.4-rt
+      - v4.19-rt
+      - v4.14-rt
+      - v4.9-rt
+      - v4.4-rt
+    tests:
+      - kvm:kvm_create_max_vcpus

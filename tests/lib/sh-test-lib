@@ -1,0 +1,701 @@
+#!/bin/sh
+
+LANG=C
+export LANG
+
+error_fatal() {
+    # shellcheck disable=SC2039
+    local msg="$1"
+    [ -z "${msg}" ] && msg="Unknown error"
+    if command -v lava-test-raise; then
+        lava-test-raise "${msg}"
+    else
+        printf "FATAL ERROR: %s\n" "${msg}" >&2
+    fi
+    exit 1
+}
+
+error_msg() {
+    # shellcheck disable=SC2039
+    local msg="$1"
+    [ -z "${msg}" ] && msg="Unknown error"
+    printf "ERROR: %s\n" "${msg}" >&2
+    exit 1
+}
+
+warn_msg() {
+    # shellcheck disable=SC2039
+    local msg="$1"
+    [ -z "${msg}" ] && msg="Unknown error"
+    printf "WARNING: %s\n" "${msg}" >&2
+}
+
+info_msg() {
+    # shellcheck disable=SC2039
+    local msg="$1"
+    [ -z "${msg}" ] && msg="Unknown info"
+    printf "INFO: %s\n" "${msg}" >&1
+}
+
+check_root() {
+    if [ "$(id -ru)" -eq 0 ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+exit_on_fail() {
+    # shellcheck disable=SC2039
+    local exit_code="$?"
+    [ "$#" -lt 1 ] && error_msg "Usage: exit_on_fail test_case [skip_list]"
+    # shellcheck disable=SC2039
+    local test_case="$1"
+    # shellcheck disable=SC2039
+    local skip_list="$2"
+
+    if [ "${exit_code}" -ne 0 ]; then
+        echo "${test_case} fail" | tee -a "${RESULT_FILE}"
+
+        # skip_list is a list of tests sepereated by space. This might be
+        # useful when exiting on prerequisite not met.
+        if [ -n "${skip_list}" ]; then
+            for i in ${skip_list}; do
+                echo "$i skip" | tee -a "${RESULT_FILE}"
+            done
+        fi
+
+        # Exit normally to continue to run the following steps defined in test
+        # definition file.
+        exit 0
+    else
+        echo "${test_case} pass" | tee -a "${RESULT_FILE}"
+        return 0
+    fi
+}
+
+exit_on_skip() {
+    # shellcheck disable=SC2039
+    local exit_code="$?"
+    [ "$#" -lt 1 ] && error_msg "Usage: exit_on_skip test_case [msg]"
+    # shellcheck disable=SC2039
+    local test_case="$1"
+    # shellcheck disable=SC2039
+    local msg="$2"
+
+    if [ "${exit_code}" -ne 0 ]; then
+        echo "${test_case} skip" | tee -a "${RESULT_FILE}"
+
+        if [ -n "${msg}" ]; then
+            warn_msg "${msg}"
+        fi
+
+        # Exit normally to continue to run the following steps defined in test
+        # definition file.
+        exit 0
+    else
+        echo "${test_case} pass" | tee -a "${RESULT_FILE}"
+        return 0
+    fi
+}
+
+check_return() {
+    # shellcheck disable=SC2039
+    local exit_code="$?"
+    [ "$#" -ne 1 ] && error_msg "Usage: check_return test_case"
+    # shellcheck disable=SC2039
+    local test_case="$1"
+
+    if [ "${exit_code}" -ne 0 ]; then
+        echo "${test_case} fail" | tee -a "${RESULT_FILE}"
+        return "${exit_code}"
+    else
+        echo "${test_case} pass" | tee -a "${RESULT_FILE}"
+        return 0
+    fi
+}
+
+# When shell argument "-e" set in test script, check_return and exit_on_fail
+# would NOT work. run_test_case should be used instead.
+run_test_case() {
+    [ "$#" -lt 2 ] && error_msg "Usage: run_test_case <test_command> <test_case_id> [skip_list]"
+    # shellcheck disable=SC2039
+    local test_command="$1"
+    # shellcheck disable=SC2039
+    local test_case_id="$2"
+    # shellcheck disable=SC2039
+    local skip_list="$3"
+
+    if eval "${test_command}"; then
+        echo "${test_case_id} pass" | tee -a "${RESULT_FILE}"
+    else
+        echo "${test_case_id} fail" | tee -a "${RESULT_FILE}"
+        # When skip_list isn't empty, skip the tests and exit.
+        if [ -n "${skip_list}" ]; then
+            for i in ${skip_list}; do
+                echo "$i skip" | tee -a "${RESULT_FILE}"
+            done
+            exit 0
+        fi
+    fi
+
+    return 0
+}
+
+report_pass() {
+    [ "$#" -ne 1 ] && error_msg "Usage: report_pass test_case"
+    # shellcheck disable=SC2039
+    local test_case="$1"
+    echo "${test_case} pass" | tee -a "${RESULT_FILE}"
+}
+
+report_fail() {
+    [ "$#" -ne 1 ] && error_msg "Usage: report_fail test_case"
+    # shellcheck disable=SC2039
+    local test_case="$1"
+    echo "${test_case} fail" | tee -a "${RESULT_FILE}"
+}
+
+report_skip() {
+    [ "$#" -ne 1 ] && error_msg "Usage: report_skip test_case"
+    # shellcheck disable=SC2039
+    local test_case="$1"
+    echo "${test_case} skip" | tee -a "${RESULT_FILE}"
+}
+
+report_unknown() {
+    [ "$#" -ne 1 ] && error_msg "Usage: report_unknown test_case"
+    # shellcheck disable=SC2039
+    local test_case="$1"
+    echo "${test_case} unknown" | tee -a "${RESULT_FILE}"
+}
+
+report_set_start() {
+    [ "$#" -ne 1 ] && error_msg "Usage: report_set_start <test_set>"
+    # shellcheck disable=SC2039
+    local test_set_name="$1"
+    echo "lava-test-set start ${test_set_name}" | tee -a "${RESULT_FILE}"
+}
+
+report_set_stop() {
+    [ "$#" -ne 0 ] && error_msg "Usage: report_set_stop"
+    echo "lava-test-set stop" | tee -a "${RESULT_FILE}"
+}
+
+add_metric() {
+    if [ "$#" -lt 3 ]; then
+        warn_msg "The number of parameters less then 3"
+        error_msg "Usage: add_metric test_case result measurement [units]"
+    fi
+    # shellcheck disable=SC2039
+    local test_case="$1"
+    # shellcheck disable=SC2039
+    local result="$2"
+    # shellcheck disable=SC2039
+    local measurement="$3"
+    # shellcheck disable=SC2039
+    local units="$4"
+
+    echo "${test_case} ${result} ${measurement} ${units}" | tee -a "${RESULT_FILE}"
+}
+
+detect_abi() {
+    abi=$(uname -m)
+    case "${abi}" in
+      armv7|armv7l|armv7el|armv7lh) abi="armeabi" ;;
+      arm64|armv8|arm64-v8a|aarch64) abi="arm64" ;;
+      i386|i686) abi="i386" ;;
+      x86_64) abi="x86_64" ;;
+      *) error_msg "Unsupported architecture: ${abi}" ;;
+    esac
+}
+
+dist_name() {
+    if [ -f /etc/os-release ]; then
+        # shellcheck disable=SC1091
+        dist=$(. /etc/os-release && echo "${ID}")
+    elif [ -x /usr/bin/lsb_release ]; then
+        dist="$(lsb_release -si)"
+    elif [ -f /etc/lsb-release ]; then
+        # shellcheck disable=SC1091
+        dist="$(. /etc/lsb-release && echo "${DISTRIB_ID}")"
+    elif [ -f /etc/debian_version ]; then
+        dist="debian"
+    elif [ -f /etc/fedora-release ]; then
+        dist="fedora"
+    elif [ -f /etc/centos-release ]; then
+        dist="centos"
+    else
+        dist="unknown"
+        warn_msg "Unsupported distro: cannot determine distribution name"
+    fi
+
+    # convert dist to lower case
+    dist=$(echo ${dist} | tr '[:upper:]' '[:lower:]')
+    case "${dist}" in
+        rpb*) dist="oe-rpb" ;;
+    esac
+}
+
+install_deps() {
+    # shellcheck disable=SC2039
+    local pkgs="$1"
+    [ -z "${pkgs}" ] && error_msg "Usage: install_deps pkgs"
+    # skip_install parmater is optional.
+    # shellcheck disable=SC2039
+    local skip_install="${2:-false}"
+
+    if [ "${skip_install}" = "True" ] || [ "${skip_install}" = "true" ]; then
+        info_msg "install_deps skipped"
+    else
+        ! check_root && \
+            error_msg "About to install packages, please run this script as root."
+        info_msg "Installing ${pkgs}"
+        dist_name
+        case "${dist}" in
+          debian|ubuntu)
+            last_apt_time=/tmp/apt-get-updated.last
+            apt_cache_time=21600 # 6 hours
+            # Only run apt-get update if it hasn't been run in $apt_cache_time seconds
+            if [ ! -e ${last_apt_time} ] || \
+               [ "$(stat --format=%Y ${last_apt_time})" -lt $(( $(date +%s) - apt_cache_time )) ]; then
+                DEBIAN_FRONTEND=noninteractive apt-get update -q -y && touch ${last_apt_time}
+            fi
+            # shellcheck disable=SC2086
+            DEBIAN_FRONTEND=noninteractive apt-get install -q -y ${pkgs}
+            ;;
+          centos)
+            # shellcheck disable=SC2086
+            yum -e 0 -y install ${pkgs}
+            ;;
+          fedora)
+            # shellcheck disable=SC2086
+            dnf -e 0 -y install ${pkgs}
+            ;;
+          *)
+            warn_msg "Unsupported distro: ${dist}! Package installation skipped."
+            ;;
+        esac
+        # shellcheck disable=SC2181
+        if [ $? -ne 0 ]; then
+            error_msg "Failed to install dependencies, exiting..."
+        fi
+    fi
+}
+
+remove_pkgs() {
+    pkgs="$1"
+    [ -z "${pkgs}" ] && error_msg "Usage: remove_pkgs pkgs"
+    ! check_root && error_msg "remove_pkgs() requires root permission."
+    info_msg "Removing ${pkgs} ..."
+    dist_name
+    case "${dist}" in
+      debian|ubuntu)
+        # shellcheck disable=SC2086
+        DEBIAN_FRONTEND=noninteractive apt-get -y purge ${pkgs}
+        ;;
+      centos)
+        # shellcheck disable=SC2086
+        yum -y remove ${pkgs}
+        ;;
+      fedora)
+        # shellcheck disable=SC2086
+        dnf -y remove ${pkgs}
+        ;;
+      *)
+        warn_msg "Unsupported distro: ${dist}! Package uninstallation skipped."
+        ;;
+    esac
+}
+
+# Return the exit code of the first command when using pipe.
+pipe0_status() {
+    [ "$#" -ne 2 ] && error_msg "Usage: pipe0_status cmd1 cmd2"
+    # shellcheck disable=SC2039
+    local cmd1="$1"
+    # shellcheck disable=SC2039
+    local cmd2="$2"
+
+    exec 4>&1
+    # shellcheck disable=SC2039
+    local ret_val
+    ret_val=$({ { eval "${cmd1}" 3>&-; echo "$?" 1>&3; } 4>&- \
+              | eval "${cmd2}" 1>&4; } 3>&1)
+    exec 4>&-
+
+    return "${ret_val}"
+}
+
+validate_check_sum() {
+    if [ "$#" -ne 2 ]; then
+        warn_msg "The number of parameters should be 2"
+        error_msg "Usage: validate_check_sum filename known_sha256sum"
+        return 1
+    fi
+    # shellcheck disable=SC2039
+    local OUTPUT_FILE_NAME="$1"
+    # shellcheck disable=SC2039
+    local SHA256SUM_CHECK="$2"
+    # Get sha256sum of output_file
+    # shellcheck disable=SC2039
+    local GET_SHA256SUM
+    GET_SHA256SUM=$(sha256sum "${OUTPUT_FILE_NAME}" | awk '{print $1}')
+    echo "GET_SHA256SUM is ${GET_SHA256SUM}"
+    if [ "${SHA256SUM_CHECK}" = "${GET_SHA256SUM}" ] ; then
+        return 0
+    else
+        echo "checksum did not match"
+        return 1
+    fi
+}
+
+convert_to_mb() {
+    [ "$#" -ne 2 ] && error_msg "Usage: convert_to_mb value units"
+    if ! echo "$1" | grep -E -q "^[0-9.]+$"; then
+        error_msg "The first argument isn't a number"
+    fi
+    # shellcheck disable=SC2039
+    local value="$1"
+    # shellcheck disable=SC2039
+    local units="$2"
+
+    case "${units}" in
+      KB|kb) value=$(echo "${value}" | awk '{print $1/1024}') ;;
+      MB|mb) ;;
+      GB|gb) value=$(echo "${value}" | awk '{print $1*1024}') ;;
+      TB|tb) value=$(echo "${value}" | awk '{print $1*1024*1024}') ;;
+      *) error_msg "Unsupported units" ;;
+    esac
+
+    echo "${value}"
+}
+
+convert_to_sec() {
+    [ "$#" -ne 1 ] && error_msg "Usage: convert_to_sec value (including unit)"
+
+    # shellcheck disable=SC2039,SC2155
+    local value=$(echo "$1" | sed 's/[smhdSMHD]$//')
+    # shellcheck disable=SC2039,SC2155
+    local unit=$(echo "$1" | sed -n 's/^[0-9]*\([smhdSMHD]\)/\1/p' )
+
+    if ! echo "$value" | grep -E -q "^[0-9.]+$"; then
+        error_msg "The argument isn't a valid (number optionally with unit)"
+    fi
+
+    case "${unit}" in
+      S|s|"") ;;
+      M|m) value=$(echo "${value}" | awk '{print $1 * 60}') ;;
+      H|h) value=$(echo "${value}" | awk '{print $1 * 60 * 60}') ;;
+      D|d) value=$(echo "${value}" | awk '{print $1 * 60 * 60 * 24}') ;;
+      *) error_msg "Unsupported time unit \"${unit}\"" ;;
+    esac
+
+    echo "${value}"
+}
+
+dist_info() {
+    if ! command -v lsb_release > /dev/null; then
+        dist_name
+        case "${dist}" in
+          debian|ubuntu) install_deps "lsb-release" ;;
+          centos|fedora) install_deps "redhat-lsb-core" ;;
+          *) warn_msg "Unsupported distro: dist_info skipped"
+        esac
+    fi
+
+    # shellcheck disable=SC2034
+    Release=$(lsb_release -r | awk '{print $2}')
+    Codename=$(lsb_release -c | awk '{print $2}')
+}
+
+add_key() {
+    [ "$#" -ne 1 ] && error_msg "Usage: add_key url"
+    # shellcheck disable=SC2039
+    local url="$1"
+
+    ! check_root && \
+        error_msg "About to use apt-key, please run this script as root."
+    dist_name
+    case "${dist}" in
+      debian|ubuntu) wget -O - "${url}" | apt-key add - ;;
+      centos|fedora) infor_msg "add_key isn't needed on ${dist}" ;;
+      *) warn_msg "Unsupported distro: add_key skipped"
+    esac
+}
+
+add_repo() {
+    [ "$#" -lt 1 ] && error_msg "Usage: add_repo <url> [backports]"
+    # shellcheck disable=SC2039
+    local url="$1"
+
+    ! check_root && \
+        error_msg "About to add a repo, please run this script as root."
+    dist_name
+    case "${dist}" in
+      # Detect Debian/Ubuntu codename and add repo automatically. The same url
+      # should work on all distributions supported by the repo.
+      debian|ubuntu)
+        dist_info
+        if [ -z "$2" ]; then
+            # shellcheck disable=SC2039
+            local backports=""
+        elif [ "$2" = "backports" ]; then
+            # shellcheck disable=SC2039
+            local backports="-backports"
+        else
+            echo "Usage: add_repo <url> [backports]"
+            error_msg "$2 is not a supported argument, should be 'backports'"
+        fi
+        echo "deb ${url} ${Codename}${backports} main" \
+            >> "/etc/apt/sources.list.d/3rd-party-repo.list"
+        ;;
+      # It is not easy to amend url with distro version as its format may vary
+      # by repo. Test definition/plan should provide a correct repo url.
+      centos|fedora)
+        wget -O - "${url}" >> "/etc/yum.repos.d/3rd-party.repo"
+        ;;
+      *)
+        warn_msg "Unsupported distro: ${dist}! add_repo skipped"
+        ;;
+   esac
+}
+
+create_out_dir() {
+    [ -z "$1" ] && error_msg "Usage: create_out_dir output_dir"
+    # shellcheck disable=SC2039
+    local OUTPUT=$1
+    [ -d "${OUTPUT}" ] &&
+        mv "${OUTPUT}" "${OUTPUT}_$(date -r "${OUTPUT}" +%Y%m%d%H%M%S)"
+    mkdir -p "${OUTPUT}"
+    [ -d "${OUTPUT}" ] || error_msg "Could not create output directory ${OUTPUT}"
+}
+
+generate_skipfile() {
+    # Generate a skipfile and set the SKIPFILE variable based on SKIPFILE_YAML,
+    # BOARD, BRANCH, and ENVIRONMENT.
+    #
+    # In:
+    #   SKIPFILE_YAML: (required) skipgen/yaml formatted skipfile
+    #   SKIPFILE_PATH: (required) destination file for generated skipfile
+    #   BOARD: (optional) board name to pass to skipgen
+    #   BRANCH: (optional) branch name to pass to skipgen
+    #   ENVIRONMENT: (optional) environment name to pass to skipgen
+    #
+    info_msg "Generating a skipfile based on ${SKIPFILE_YAML}"
+    detect_abi
+    # shellcheck disable=SC2039
+    local SKIPGEN_ARGS=""
+    test -n "${BOARD}" && SKIPGEN_ARGS="${SKIPGEN_ARGS} --board ${BOARD}"
+    test -n "${BRANCH}" && SKIPGEN_ARGS="${SKIPGEN_ARGS} --branch ${BRANCH}"
+    test -n "${ENVIRONMENT}" && SKIPGEN_ARGS="${SKIPGEN_ARGS} --environment ${ENVIRONMENT}"
+    # shellcheck disable=SC2086
+    ../../bin/${abi}/skipgen ${SKIPGEN_ARGS} "${SKIPFILE_YAML}" > "${SKIPFILE_PATH}"
+    test $? -eq 0 || error_msg "skipgen failed to generate a skipfile"
+    info_msg "Using the following generated skipfile contents (until EOF):"
+    cat "${SKIPFILE_PATH}"
+    info_msg "EOF"
+}
+
+# Description: parted is not working on SSD (Solid-State Drives) this is the
+# reason to use fdisk instead.
+# Dependency packages for fdisk and mkfs are "fdisk e2fsprogs dosfstools"
+# fdisk and mkfs commands might be in $PATH /sbin or /usr/sbin or
+# /usr/local/sbin export PATH for better usage.
+export PATH=$PATH:/sbin:/usr/sbin:/usr/local/sbin
+
+
+# Usage:
+# partition_disk "/dev/sdb" "+5G +10G"
+# shellcheck disable=SC2039
+partition_disk() {
+    # when sizes is empty it creates single partitions with total disk size
+    [ "$#" -ne 1 ] && error_msg "Usage: <block-device> <sizes>"
+    local device="$1"
+    local sizes="$2"
+
+    command -v fdisk
+    exit_on_fail "fdisk not in ${PATH} or not installed"
+
+    # Create a new empty DOS partition table
+    (
+    echo o
+    echo w) | fdisk "${device}"
+
+    if [ -n "${sizes}" ]; then
+        # Create partitions as per sizes
+        for size in ${sizes}; do
+            # Create patitions with ${size}
+            (
+            echo n
+            echo p
+            echo
+            echo
+            echo "${size}"
+            echo w) | fdisk "${device}"
+            check_return "fdisk-${device}-${size}-partition"
+            # sync and wait 5 sec
+            sync
+            sleep 5
+        done
+    fi
+
+    # Create a partition at the end.
+    # Use the rest of the disk.
+    (
+    echo n
+    echo p
+    echo
+    echo
+    echo
+    echo w) | fdisk "${device}"
+    check_return "fdisk-${device}-end-partition"
+    # sync and wait 5 sec
+    sync
+    sleep 5
+}
+# Usage:
+# format_partitions "/dev/sdb" "ext4"
+# shellcheck disable=SC2039
+format_partitions() {
+    [ "$#" -ne 2 ] && error_msg "Usage: <block-device> <filesystem-type>"
+    local device="$1"
+    local filesystem="$2"
+    local partition=""
+    local total_partitions=""
+
+    command -v mkfs
+    exit_on_fail "mkfs not in ${PATH} or not installed"
+
+    # Total partitions in a block device
+    total_partitions=$(find "${device}"* | grep "[0-9]" | tr '\n' ' ' )
+
+    # Format each partition in a given block device
+    for partition in ${total_partitions} ; do
+        echo "Formatting ${partition} to ${filesystem}"
+        if [ "${filesystem}" = "fat32" ]; then
+            echo "y" | mkfs -t vfat -F 32 "${partition}"
+            check_return " mkfs-t-vfat-F-32-${partition}"
+        else
+            echo "y" | mkfs -t "${filesystem}" "${partition}"
+            check_return "mkfs-${filesystem}-${partition}"
+        fi
+        # sync and wait 5 sec
+        sync
+        sleep 5
+    done
+}
+
+background_process_start() {
+    NAME="$1"
+    shift
+    if [ -z "$NAME" ]; then
+	err_msg "Usage: background-process-start NAME --cmd PROCESS"
+    fi
+
+    while [ $# -gt 0 ]; do
+	case $1 in
+            --cmd)
+		shift
+		PROCESS="$*"
+		shift
+		;;
+            *)
+		err_msg "Unhandled argument"
+		;;
+	esac
+    done
+
+    if [ -z "${PROCESS}" ]; then
+	return
+    fi
+
+    result_dir="${OUTPUT}/results/$NAME"
+    mkdir -p "${result_dir}"
+
+    cat <<EOF > "${result_dir}/bg_run.sh"
+set -e
+trap "exit" SIGHUP SIGINT SIGTERM
+while true; do
+  $PROCESS > /dev/null
+  sleep 1
+done
+EOF
+
+    /bin/bash "${result_dir}/bg_run.sh" &
+    echo $! > "${result_dir}/pid"
+}
+
+background_process_stop() {
+    NAME="$1"
+    shift
+    if [ -z "${NAME}" ]; then
+	err_msg "Usage: background-process-stop NAME"
+    fi
+
+    result_dir="${OUTPUT}/results/${NAME}"
+
+    if [ ! -d "${result_dir}" ] ; then
+	return
+    fi
+
+    PID=$(cat "${result_dir}/pid")
+
+    if ps -p "${PID}" > /dev/null;
+    then
+	kill "${PID}" > /dev/null 2>&1
+    fi
+}
+
+# register the current dmesg
+dmesg_capture_start()
+{
+	dmesg --console-off
+	dmesg > "$OUTPUT/dmesg.test.start"
+}
+
+# Print all kernel messages that appears since last dmesg_capture_start
+dmesg_capture_result() {
+	echo "=============================================="
+	dmesg > "$OUTPUT/dmesg.test.result"
+	diff -u "$OUTPUT/dmesg.test.start" "$OUTPUT/dmesg.test.result"
+	# restore normal dmesg behavour
+	dmesg --console-on
+	echo "=============================================="
+}
+
+# shellcheck disable=SC2039
+get_test_program() {
+	local test_git_url="$1"
+	local test_dir="$2"
+	local test_prog_version="$3"
+	local test_program="$4"
+	if [ ! -d "$test_dir" ] || [ -d "$test_dir"/.git ]; then
+		if [ "$test_prog_version" != "" ]; then
+			if [ -d "$test_dir"/.git ]; then
+				echo Using repository "$PATH"
+			else
+				git clone "$test_git_url" "$test_dir"
+			fi
+
+			cd "$test_dir" || exit 1
+			if [ "$test_prog_version" != "" ]; then
+				if ! git reset --hard "$test_prog_version"; then
+					echo Failed to set "${test_program}" to commit "$test_prog_version", sorry
+					exit 1
+				fi
+			else
+				echo Using "$PATH"
+			fi
+		else
+			echo Assuming "${test_program}" is pre-installed in "$test_dir"
+			cd "$test_dir" || exit 1
+		fi
+	else
+		if [ ! -d "$test_dir" ]; then
+			echo No "${test_program}" suite in "$test_dir", sorry
+			exit 1
+		fi
+		echo Assuming "${test_program}" is pre-installed in "$test_dir"
+		cd "$test_dir" || exit 1
+	fi
+}
