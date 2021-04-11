@@ -61,7 +61,9 @@ run_one()
 
 	TEST_HDR_MSG="selftests: $DIR: $BASENAME_TEST"
 	echo "# $TEST_HDR_MSG"
-	if [ ! -x "$TEST" ]; then
+	if egrep -q "^$DIR:$BASENAME_TEST$" "$SKIPFILE"; then
+		echo "not ok $test_num $TEST_HDR_MSG # SKIP"
+	elif [ ! -x "$TEST" ]; then
 		echo -n "# Warning: file $TEST is "
 		if [ ! -e "$TEST" ]; then
 			echo "missing!"
