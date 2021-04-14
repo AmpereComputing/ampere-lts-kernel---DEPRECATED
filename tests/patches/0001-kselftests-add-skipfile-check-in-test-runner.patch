@@ -1,0 +1,28 @@
+From e16bead833e8adfb62ff8ec56eb790721b656b30 Mon Sep 17 00:00:00 2001
+From: Bobo <lmw.bobo@gmail.com>
+Date: Sun, 11 Apr 2021 05:02:08 +0000
+Subject: [PATCH] kselftests: add skipfile check in test runner
+
+Signed-off-by: Bobo <lmw.bobo@gmail.com>
+---
+ tools/testing/selftests/kselftest/runner.sh | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/tools/testing/selftests/kselftest/runner.sh b/tools/testing/selftests/kselftest/runner.sh
+index e84d901f8567..137e3ae33ce5 100644
+--- a/tools/testing/selftests/kselftest/runner.sh
++++ b/tools/testing/selftests/kselftest/runner.sh
+@@ -61,7 +61,9 @@ run_one()
+ 
+ 	TEST_HDR_MSG="selftests: $DIR: $BASENAME_TEST"
+ 	echo "# $TEST_HDR_MSG"
+-	if [ ! -x "$TEST" ]; then
++	if egrep -q "^$DIR:$BASENAME_TEST$" "$SKIPFILE"; then
++		echo "not ok $test_num $TEST_HDR_MSG # SKIP"
++	elif [ ! -x "$TEST" ]; then
+ 		echo -n "# Warning: file $TEST is "
+ 		if [ ! -e "$TEST" ]; then
+ 			echo "missing!"
+-- 
+2.25.1
+
