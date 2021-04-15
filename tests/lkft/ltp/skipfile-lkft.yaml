@@ -332,3 +332,15 @@ skiplist:
       - all
     tests:
       - ftrace_stress_test.sh
+
+  - reason: >
+      cpu hotplug testcause will crash the system in Mt. Jade Server
+    url:
+    environments: production
+    boards:
+      - mt.jade
+    branches:
+      - 5.4
+    tests:
+      - cpuhotplug04
+
