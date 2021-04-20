@@ -33,11 +33,19 @@ fi
 
 cd ${SCRIPTPATH}/lkft/kselftest
 ./kselftest.sh -p /opt/kselftests -g 5.4 -S skipfile-lkft.yaml -s true
+echo "Test lkft/kselftest finished, please check lkft/kselftest/output/result.csv"
 
 cd ${SCRIPTPATH}/lkft/ltp
 ./ltp.sh -S skipfile-lkft.yaml -g 5.4 -s true -i /opt/ltp -d ltptmp
-
-echo
-echo
-echo "Test lkft/kselftest finished, please check lkft/kselftest/output/result.csv"
 echo "Test lkft/ltp finished, please check lkft/ltp/output/result.csv"
+
+echo "=============================="
+echo " Start ampere function tests"
+echo "=============================="
+
+cd ${SCRIPTPATH}/ampere_functions/hw_monitor
+./altra_hw_monitor.sh
+cd ${SCRIPTPATH}/ampere_functions/leds
+./altra_leds.sh
+cd ${SCRIPTPATH}/ampere_functions/pmu
+./altra_pmu.sh
