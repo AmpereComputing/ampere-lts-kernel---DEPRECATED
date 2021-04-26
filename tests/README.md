@@ -5,3 +5,9 @@ Test cases for ampere-lts-kernel.
 * ampere_functions: Ampere kernel patch functional test cases.
 
 * runall.sh: Invoke all test cases. The test case can also run independently.
+
+
+Sample test result:
+
+* LTP: https://github.com/AmpereComputing/ampere-lts-kernel/issues/2
+* Kselftest: https://github.com/AmpereComputing/ampere-lts-kernel/issues/3
