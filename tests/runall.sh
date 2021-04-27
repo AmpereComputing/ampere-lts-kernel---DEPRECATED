@@ -49,3 +49,6 @@ cd ${SCRIPTPATH}/ampere_functions/leds
 ./altra_leds.sh
 cd ${SCRIPTPATH}/ampere_functions/pmu
 ./altra_pmu.sh
+cd ${SCRIPTPATH}/ampere_functions/numa
+./numa.sh
+
