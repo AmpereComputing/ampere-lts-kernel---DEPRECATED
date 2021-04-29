@@ -18,19 +18,19 @@ if ret.returncode != 0:
     sys.exit(1)
 
 srat_out = subprocess.check_output('dmesg | grep "SRAT: Node"', shell=True).decode('utf-8')
-nodes_size = []
+nodes_size = {}
 for line in srat_out.split('\n'):
     matched = re.match(".*ACPI: SRAT: Node (\d+) PXM \d+ \[mem 0x([0-9a-fA-F]+)-0x([0-9a-fA-F]+)\]$", line)
     if matched:
         node_num = int(matched.group(1))
         start_addr = int(matched.group(2), 16)
         end_addr = int(matched.group(3), 16)
-        if node_num + 1 > len(nodes_size):
-            nodes_size.append(end_addr - start_addr)
+        if node_num not in nodes_size:
+            nodes_size[node_num] = end_addr - start_addr
         else:
             nodes_size[node_num] += end_addr - start_addr
 
-for idx, nsize in enumerate(nodes_size):
+for idx, nsize in sorted(nodes_size.items()):
     sysfs_size = get_sysfs_node_size(idx)
     delta = abs(nsize - sysfs_size)
     print("Numa Node %d: ACPI SRAT size %d MB, Kernel Reported %d MB, Delta %d MB" % (idx, MB(nsize), MB(sysfs_size), MB(delta)))
