@@ -12,7 +12,7 @@ function numa_check_node {
     [ $? -ne 0 ] && echo "CONFIG_NODES_SHIFT not set in current kernel" && return 1
     node_cnt=$(numactl -H | grep "node .* cpus:" | wc -l)
     info_msg "Found $node_cnt numa node"
-    [ $node_cnt -ne 8 ] && echo "expected 8 numa nodes" && return 1
+    [ $node_cnt -lt 8 ] && echo "This test expected more than 8 numa nodes. In BIOS please set: Chipset -> CPU Configuration -> ANC mode -> Quadrant" && return 1
     return 0
 }
 
