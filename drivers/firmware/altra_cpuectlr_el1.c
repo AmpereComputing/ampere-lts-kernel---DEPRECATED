@@ -37,6 +37,18 @@
 #define CPU_CONFIG_CPUECTLR_EL1_VALUE_OFF	0x10
 #define CPU_CONFIG_SIGNATURE			0x43504D41
 
+#define CPU_CONFIG_CPUECTLR_EL1_RPF_DIS_MASK	(ULL(0x1) << 5)
+#define CPU_CONFIG_CPUECTLR_EL1_PF_STS_DIS_MASK	(ULL(0x1) << 7)
+#define CPU_CONFIG_CPUECTLR_EL1_PF_STI_DIS_MASK	(ULL(0x1) << 8)
+#define CPU_CONFIG_CPUECTLR_EL1_PF_DIS_MASK	(ULL(0x1) << 15)
+#define CPU_CONFIG_CPUECTLR_EL1_PF_SS_L2_DIST_MASK	(ULL(0x3) << 12)
+#define CPU_CONFIG_CPUECTLR_EL1_MASK \
+	(CPU_CONFIG_CPUECTLR_EL1_RPF_DIS_MASK | \
+	CPU_CONFIG_CPUECTLR_EL1_PF_STS_DIS_MASK | \
+	CPU_CONFIG_CPUECTLR_EL1_PF_STI_DIS_MASK | \
+	CPU_CONFIG_CPUECTLR_EL1_PF_SS_L2_DIST_MASK | \
+	CPU_CONFIG_CPUECTLR_EL1_PF_DIS_MASK)
+
 struct kobject *cpuectlr_el1_kobj;
 static void __iomem *cpuectlr_el1_addr;
 
@@ -87,7 +99,8 @@ static ssize_t cpuectlr_el1_wen_mask_store(struct device *device,
 	rc = kstrtoll(buf, 0, &val);
 	if (rc)
 		return rc;
-	altra_config_write64(cpuectlr_el1_addr, CPU_CONFIG_CPUECTLR_EL1_WEN_MASK_OFF, val);
+	altra_config_write64(cpuectlr_el1_addr, CPU_CONFIG_CPUECTLR_EL1_WEN_MASK_OFF,
+			     val & CPU_CONFIG_CPUECTLR_EL1_MASK);
 
 	return count;
 }
