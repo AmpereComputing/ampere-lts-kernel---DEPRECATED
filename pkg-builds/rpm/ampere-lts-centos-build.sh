@@ -42,7 +42,6 @@ fi
 
 CENTOSNAMEPREFIX=amp_sw_centos_8.0
 
-[ ! -d ../ampere-lts-kernel ] && git clone https://github.com/AmpereComputing/ampere-lts-kernel.git ../ampere-lts-kernel
 
 CENTOSSPECFILE=SPECS/kernel-ampere-lts-5.4.spec
 RPMVERSION=`grep -e "^%define rpmversion" ${CENTOSSPECFILE} | cut -d' ' -f3`
@@ -52,10 +51,10 @@ rpmversion=${RPMVERSION}
 pkgrelease=${PKGRELEASE}
 
 # Prepare Linux 5.4 source in SOURCES/
+[ ! -f ./linux-5.4.y.zip ] && wget https://github.com/AmpereComputing/ampere-lts-kernel/archive/refs/heads/linux-5.4.y.zip
 LINUX_SRC=linux-${rpmversion}-${pkgrelease}
 rm -fr ${LINUX_SRC} SOURCES/linux-${rpmversion}-${pkgrelease}.tar.xz
-cp -r ../ampere-lts-kernel ${LINUX_SRC}
-cd ${LINUX_SRC};git checkout origin/linux-5.4.y;git clean -fd;make distclean;rm -fr .git;cd -
+unzip -q linux-5.4.y.zip; mv ampere-lts-kernel-linux-5.4.y ${LINUX_SRC}
 echo "# arm64" > SOURCES/kernel-aarch64-altra.config
 echo "CONFIG_GCC_VERSION=${GCC_VERSION}" >> SOURCES/kernel-aarch64-altra.config
 echo "CONFIG_LOCALVERSION=\"\"" >> SOURCES/kernel-aarch64-altra.config
@@ -88,10 +87,10 @@ rpmversion=${RPMVERSION}
 pkgrelease=${PKGRELEASE}
 
 # Prepare Linux 5.10 source in SOURCES/
+[ ! -f ./linux-5.10.y.zip ] && wget https://github.com/AmpereComputing/ampere-lts-kernel/archive/refs/heads/linux-5.10.y.zip
 LINUX_SRC=linux-${rpmversion}-${pkgrelease}
 rm -fr ${LINUX_SRC} SOURCES/linux-${rpmversion}-${pkgrelease}.tar.xz
-cp -r ../ampere-lts-kernel ${LINUX_SRC}
-cd ${LINUX_SRC};git checkout origin/linux-5.10.y;git clean -fd;make distclean;rm -fr .git;cd -
+unzip -q ./linux-5.10.y.zip; mv ampere-lts-kernel-linux-5.10.y ${LINUX_SRC}
 echo "# arm64" > SOURCES/kernel-aarch64-altra.config
 echo "CONFIG_GCC_VERSION=${GCC_VERSION}" >> SOURCES/kernel-aarch64-altra.config
 echo "CONFIG_LOCALVERSION=\"\"" >> SOURCES/kernel-aarch64-altra.config
