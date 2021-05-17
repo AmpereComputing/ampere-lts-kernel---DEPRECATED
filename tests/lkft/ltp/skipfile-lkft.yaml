@@ -344,3 +344,13 @@ skiplist:
     tests:
       - cpuhotplug04
 
+  - reason: >
+      oom1 will interrupt LTP test on Mt. Jade Server with centos8.3
+    url:
+    environments: production
+    boards:
+      - mt.jade
+    branches:
+      - all
+    tests:
+      - oom01
