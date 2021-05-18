@@ -17,7 +17,6 @@ AMP_TOOLCHAIN_VER=ampere-8.3.0-20191025-dynamic-nosysroot
 AMP_COMPILER_LOCALPATH=/opt/amp/${AMP_TOOLCHAIN_VER}/bin
 CROSS_COMPILER_NFSPATH=/tools/theobroma/gcc/${AMP_TOOLCHAIN_VER}/bin
 NATIVE_COMPILER_NFSPATH=/tools/theobroma/gcc/${AMP_TOOLCHAIN_VER}/native/${AMP_TOOLCHAIN_VER}/bin
-GCC_VERSION=80301
 
 MACHINE_TYPE=`uname -m`
 
@@ -33,6 +32,9 @@ if [ ${MACHINE_TYPE} = 'aarch64' ]; then
 else
    export CROSS_COMPILE=aarch64-ampere-linux-gnu-
 fi
+
+GCC_VERSION=$(${CROSS_COMPILE}gcc -dumpfullversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$/&00/')
+
 export XZ_OPT="--threads=0"
 TODAY=`date +%Y%m%d`
 RELBUILD="${TODAY}"
