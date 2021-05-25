@@ -155,6 +155,7 @@ run_ltp() {
 
     # default run all tests
     TST_OPTION=""
+    TST_CMDFILES=$(cat ${SCRIPTPATH}/ltp_cmdfile)
     [ ! -z "${TST_CMDFILES}" ] && TST_OPTION="-f ${TST_CMDFILES}"
 
     pipe0_status "./runltp -p -q ${TST_OPTION} \

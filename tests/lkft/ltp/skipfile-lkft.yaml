@@ -49,3 +49,4 @@ skiplist:
       - all
     tests:
       - fork09
+      - ftp
