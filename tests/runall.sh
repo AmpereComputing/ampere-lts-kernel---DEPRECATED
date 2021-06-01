@@ -24,10 +24,12 @@ if [ ! -f /opt/kselftests/run_kselftest.sh ]; then
 fi
 
 if [ ! -f /opt/ltp/runltp ]; then
+	# install dependencies first
+	apt-get install -y keyutils exfat-utils exfat-fuse quota kexec-tools dump wireguard-tools inetutils-traceroute isc-dhcp-server nftables expect xinetd libaio1 libaio-dev libmnl0 libmnl-dev
 	rm -rf /opt/ltp
 	cd ${TMPDIR} && git clone --depth 1 https://github.com/linux-test-project/ltp.git
 	cd ltp
-	make autotools && ./configure --prefix=/opt/ltp && make -j && make install
+	make autotools && ./configure --prefix=/opt/ltp --with-linux-dir=/lib/modules/`uname -r`/build && make -j && make install
 	[ $? -ne 0 ] && echo "Install ltp failed !!!" && exit 1
 fi
 
