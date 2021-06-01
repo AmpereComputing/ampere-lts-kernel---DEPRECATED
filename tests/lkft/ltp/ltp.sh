@@ -158,10 +158,16 @@ run_ltp() {
     TST_CMDFILES=$(cat ${SCRIPTPATH}/ltp_cmdfile)
     [ ! -z "${TST_CMDFILES}" ] && TST_OPTION="-f ${TST_CMDFILES}"
 
+    # create big device for fs test
+    [ -f ltp_testfile ] && rm -f testfile
+    dd if=/dev/zero of=ltp_testfile bs=1MB count=600
+
     pipe0_status "./runltp -p -q ${TST_OPTION} \
                                  -l ${OUTPUT}/LTP_${LOG_FILE}.log \
                                  -C ${OUTPUT}/LTP_${LOG_FILE}.failed \
-                                 -d ${LTP_TMPDIR} \
+                                 -T ${OUTPUT}/LTP_${LOG_FILE}.tconf \
+                                 -z `pwd`/ltp_testfile -Z ext3 \
+                                 -d `pwd`/${LTP_TMPDIR} \
                                     ${SKIPFILE}" "tee ${OUTPUT}/LTP_${LOG_FILE}.out"
 #    check_return "runltp_${LOG_FILE}"
 
@@ -169,6 +175,7 @@ run_ltp() {
     ${SCRIPTPATH}/parse_result.sh "${OUTPUT}/LTP_${LOG_FILE}.log" "${OUTPUT}/result.csv"
     # Cleanup
     # don't fail the whole test job if rm fails
+    rm -f ltp_testfile
     rm -rf "${LTP_TMPDIR}" || true
 }
 

@@ -50,3 +50,6 @@ skiplist:
     tests:
       - fork09
       - ftp
+      - nfslock3
+      - ssh4-stress
+      - ssh6-stress
