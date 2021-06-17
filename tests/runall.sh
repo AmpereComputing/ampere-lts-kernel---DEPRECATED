@@ -11,9 +11,28 @@ TMPDIR="/tmp/ampere_tests_tmp"
 rm -rf ${TMPDIR}
 mkdir -pv ${TMPDIR}
 
+install_ltp_deps() {
+	dist_name
+	case "${dist}" in
+		debian|ubuntu)
+			apt-get install -y keyutils exfat-utils exfat-fuse quota kexec-tools dump wireguard-tools inetutils-traceroute isc-dhcp-server nftables expect xinetd libaio1 libaio-dev libmnl0 libmnl-dev
+			;;
+		centos)
+			yum install -y clang llvm libmount libmount-devel libaio libaio-devel libtirpc libtirpc-devel iproute-tc psmisc exfatprogs ntfsprogs btrfs-progs wireguard-tools keyutils dump sysstat traceroute nfs-utils bind dhcp-server telnet dnsmasq fuse expect kexec-tools nftables xinetd libmnl libmnl-devel quotatool quota quota-devel xfsprogs xfsprogs-devel libattr libattr-devel libacl libacl-devel lksctp-tools lksctp-tools-devel perl-JSON perl-libwww-perl libhugetlbfs libhugetlbfs-devel telnet-server
+			rpm -q btrfs-progs || rpm -i http://mirror.centos.org/altarch/7/os/aarch64/Packages/btrfs-progs-4.9.1-1.el7.aarch64.rpm
+			ps aux | grep "[r]pc.mountd" || systemctl enable nfs-server.service && systemctl start nfs-server.service
+			;;
+		*)
+			echo "Unsupported distro: ${dist}!"
+			;;
+	esac
+}
+
+kversion=$(uname -r | awk -F . '{print $1 "." $2}')
+
 if [ ! -f /opt/kselftests/run_kselftest.sh ]; then
 	rm -rf /opt/kselftests && mkdir -pv /opt/kselftests
-	cd ${TMPDIR} && git clone --depth 1 https://github.com/AmpereComputing/ampere-lts-kernel.git -b linux-5.4.y
+	cd ${TMPDIR} && git clone --depth 1 https://github.com/AmpereComputing/ampere-lts-kernel.git -b linux-${kversion}.y || exit 1
 	cd ampere-lts-kernel
 	# root don't have a .gitconfig
 	git config user.email "local@local.com"
@@ -24,21 +43,20 @@ if [ ! -f /opt/kselftests/run_kselftest.sh ]; then
 fi
 
 if [ ! -f /opt/ltp/runltp ]; then
-	# install dependencies first
-	apt-get install -y keyutils exfat-utils exfat-fuse quota kexec-tools dump wireguard-tools inetutils-traceroute isc-dhcp-server nftables expect xinetd libaio1 libaio-dev libmnl0 libmnl-dev
+	install_ltp_deps
 	rm -rf /opt/ltp
-	cd ${TMPDIR} && git clone --depth 1 https://github.com/linux-test-project/ltp.git
+	cd ${TMPDIR} && git clone --depth 1 https://github.com/linux-test-project/ltp.git || exit 1
 	cd ltp
 	make autotools && ./configure --prefix=/opt/ltp --with-linux-dir=/lib/modules/`uname -r`/build && make -j && make install
 	[ $? -ne 0 ] && echo "Install ltp failed !!!" && exit 1
 fi
 
 cd ${SCRIPTPATH}/lkft/kselftest
-./kselftest.sh -p /opt/kselftests -g 5.4 -S skipfile-lkft.yaml -s true
+./kselftest.sh -p /opt/kselftests -g ${kversion} -S skipfile-lkft.yaml -s true
 echo "Test lkft/kselftest finished, please check lkft/kselftest/output/result.csv"
 
 cd ${SCRIPTPATH}/lkft/ltp
-./ltp.sh -S skipfile-lkft.yaml -g 5.4 -s true -i /opt/ltp -d ltptmp
+./ltp.sh -S skipfile-lkft.yaml -g ${kversion} -s true -i /opt/ltp -d ltptmp
 echo "Test lkft/ltp finished, please check lkft/ltp/output/result.csv"
 
 echo "=============================="
