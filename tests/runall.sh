@@ -47,6 +47,8 @@ if [ ! -f /opt/ltp/runltp ]; then
 	rm -rf /opt/ltp
 	cd ${TMPDIR} && git clone --depth 1 https://github.com/linux-test-project/ltp.git || exit 1
 	cd ltp
+	# To fix broken aiodio tests, see https://patchwork.ozlabs.org/project/ltp/patch/20210601155427.996321-1-zlang@redhat.com/
+	git apply ${SCRIPTPATH}/patches/ltp-aiodio-help-aiodio-test-work-normally.diff || exit 1
 	make autotools && ./configure --prefix=/opt/ltp --with-linux-dir=/lib/modules/`uname -r`/build && make -j && make install
 	[ $? -ne 0 ] && echo "Install ltp failed !!!" && exit 1
 fi
@@ -56,7 +58,7 @@ cd ${SCRIPTPATH}/lkft/kselftest
 echo "Test lkft/kselftest finished, please check lkft/kselftest/output/result.csv"
 
 cd ${SCRIPTPATH}/lkft/ltp
-./ltp.sh -S skipfile-lkft.yaml -g ${kversion} -s true -i /opt/ltp -d ltptmp
+./ltp.sh -S skipfile-lkft.yaml -g ${kversion} -s true -i /opt/ltp -d `pwd`/ltptmp
 echo "Test lkft/ltp finished, please check lkft/ltp/output/result.csv"
 
 echo "=============================="

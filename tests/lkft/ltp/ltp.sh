@@ -158,16 +158,34 @@ run_ltp() {
     TST_CMDFILES=$(cat ${SCRIPTPATH}/ltp_cmdfile)
     [ ! -z "${TST_CMDFILES}" ] && TST_OPTION="-f ${TST_CMDFILES}"
 
+    # create files for aiodio test
+    mkdir -pv ${LTP_TMPDIR}/aiodio
+    mkdir -pv ${LTP_TMPDIR}/aiodio/junkdir
+    dd if=/dev/zero of=${LTP_TMPDIR}/aiodio/largefile bs=1MB count=100
+    file1=${LTP_TMPDIR}/aiodio/largefile
+    dd if=$file1 of=${LTP_TMPDIR}/aiodio/junkfile bs=8192 conv=block,sync
+    dd if=$file1 of=${LTP_TMPDIR}/aiodio/junkfile.aiocp.src1 bs=8192 conv=block,sync
+    dd if=$file1 of=${LTP_TMPDIR}/aiodio/junkfile.aiocp.dst1 bs=4096 conv=block,sync
+    dd if=$file1 of=${LTP_TMPDIR}/aiodio/junkfile.aiocp.src2 bs=4096 conv=block,sync
+    dd if=$file1 of=${LTP_TMPDIR}/aiodio/junkfile.aiocp.src3 bs=2048 conv=block,sync
+    dd if=$file1 of=${LTP_TMPDIR}/aiodio/junkfile.aiocp.src4 bs=1024 conv=block,sync
+    dd if=$file1 of=${LTP_TMPDIR}/aiodio/junkfile.aiocp.src5 bs=512  conv=block,sync
+    dd if=$file1 of=${LTP_TMPDIR}/aiodio/junkfile.append1 bs=8192 conv=block,sync
+    dd if=$file1 of=${LTP_TMPDIR}/aiodio/junkfile.diorh1  bs=2048 conv=block,sync
+    dd if=$file1 of=${LTP_TMPDIR}/aiodio/junkfile.diorh2  bs=1024 conv=block,sync
+    dd if=$file1 of=${LTP_TMPDIR}/aiodio/junkfile.diorh3  bs=512  conv=block,sync
+    dd if=$file1 of=${LTP_TMPDIR}/aiodio/junkfile.diorh4  bs=4096 conv=block,sync
+
     # create big device for fs test
     [ -f ltp_testfile ] && rm -f testfile
-    dd if=/dev/zero of=ltp_testfile bs=1MB count=600
+    dd if=/dev/zero of=${LTP_TMPDIR}/ltp_testfile bs=1MB count=600
 
     pipe0_status "./runltp -p -q ${TST_OPTION} \
                                  -l ${OUTPUT}/LTP_${LOG_FILE}.log \
                                  -C ${OUTPUT}/LTP_${LOG_FILE}.failed \
                                  -T ${OUTPUT}/LTP_${LOG_FILE}.tconf \
-                                 -z `pwd`/ltp_testfile -Z ext3 \
-                                 -d `pwd`/${LTP_TMPDIR} \
+                                 -z ${LTP_TMPDIR}/ltp_testfile -Z ext3 \
+                                 -d ${LTP_TMPDIR} \
                                     ${SKIPFILE}" "tee ${OUTPUT}/LTP_${LOG_FILE}.out"
 #    check_return "runltp_${LOG_FILE}"
 
