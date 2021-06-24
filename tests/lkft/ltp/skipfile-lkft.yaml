@@ -53,6 +53,7 @@ skiplist:
       - nfslock3
       - ssh4-stress
       - ssh6-stress
+      - Filecaps
 
   - reason: >
       those tests can not run on arm/arm64 architect
