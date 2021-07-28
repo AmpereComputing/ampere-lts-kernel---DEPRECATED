@@ -73,4 +73,5 @@ cd ${SCRIPTPATH}/ampere_functions/pmu
 ./altra_pmu.sh
 cd ${SCRIPTPATH}/ampere_functions/numa
 ./numa.sh
-
+cd ${SCRIPTPATH}/ampere_functions/smmu_filter_fix
+./smmu_filter_fix.sh
