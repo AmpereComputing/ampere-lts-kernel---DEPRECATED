@@ -75,3 +75,5 @@ cd ${SCRIPTPATH}/ampere_functions/numa
 ./numa.sh
 cd ${SCRIPTPATH}/ampere_functions/smmu_filter_fix
 ./smmu_filter_fix.sh
+cd ${SCRIPTPATH}/ampere_functions/perf_kvm_stat
+./perf_kvm_stat.sh
