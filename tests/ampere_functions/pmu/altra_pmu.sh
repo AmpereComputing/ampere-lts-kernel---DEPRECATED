@@ -68,6 +68,15 @@ function pmu_check_arm_smmuv3 {
 	return 0
 }
 
+function pmu_check_arm_spe {
+	spe_events=$(perf list | grep arm_spe | wc -l)
+	[ $spe_events -eq 0 ] && return 1
+	perf record -e arm_spe/ts_enable=1,pa_enable=1/ dd if=/dev/zero of=/dev/null count=10000 &> /dev/null
+	perf report --dump-raw-trace | grep "ARM SPE"
+	[ $? -ne 0 ] && return 1
+	return 0
+}
+
 pmu_check_arm_cmn
 check_return altra_pmu:arm_cmn
 
@@ -79,5 +88,8 @@ check_return altra_pmu:arm_dsu
 
 pmu_check_arm_smmuv3
 check_return altra_pmu:arm_smmuv3
+
+pmu_check_arm_spe
+check_return altra_pmu:arm_spe
 
 rm -f /tmp/pmu_check_*
