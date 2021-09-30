@@ -129,7 +129,12 @@ static umode_t altra_hwmon_is_visible(const void *_data,
 				      enum hwmon_sensor_types type,
 				      u32 attr, int channel)
 {
-	return 0444;
+	switch (type) {
+	case hwmon_energy:
+		return 0400;
+	default:
+		return 0444;
+	}
 }
 
 static const struct hwmon_ops altra_hwmon_ops = {
