@@ -396,9 +396,9 @@ static DEVICE_ATTR_RO(temp1_label);
 static DEVICE_ATTR_RO(temp1_input);
 static DEVICE_ATTR_RO(temp1_critical_alarm);
 static DEVICE_ATTR_RO(power1_label);
-static DEVICE_ATTR_RO(power1_input);
+static DEVICE_ATTR_ADMIN_RO(power1_input);
 static DEVICE_ATTR_RO(power2_label);
-static DEVICE_ATTR_RO(power2_input);
+static DEVICE_ATTR_ADMIN_RO(power2_input);
 
 static struct attribute *xgene_hwmon_attrs[] = {
 	&dev_attr_temp1_label.attr,
