@@ -16,8 +16,23 @@ function numa_check_node {
     return 0
 }
 
+function numa_device_alloc {
+    mount /dev/nvme1n1 /mnt/fiotest/
+    echo 3 > /proc/sys/vm/drop_caches
+    tmplog=`mktemp`
+    numactl -N 1 -m 1 fio --ioengine=libaio --randrepeat=0 --norandommap --thread --direct=0 --buffered=1 --group_reporting --name=seqdztest --ramp_time=5 --runtime=20 --time_based --numjobs=5 --iodepth=32 --directory=/mnt/fiotest --size=50G --rw=read --bs=256k --output=${tmplog}
+    echo
+    bw=`cat ${tmplog} | grep -oP '(?<=READ: bw=)(\d+)(?=MiB/s )'`
+    rm -f ${tmplog}
+    [ $bw -lt 2000 ] && return 1
+    return 0
+}
+
 numa_check_node
 check_return altra:numa
 
 ./srat_overlap_check.py
 check_return altra:srat_overlap_check
+
+numa_device_alloc
+check_return altra:device_alloc
