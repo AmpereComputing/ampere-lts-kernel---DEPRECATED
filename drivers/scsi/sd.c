@@ -3377,7 +3377,8 @@ static int sd_probe(struct device *dev)
 	if (!sdkp)
 		goto out;
 
-	gd = __alloc_disk_node(sdp->request_queue, NUMA_NO_NODE,
+	/*alloc disk node according to the controller's numa_node*/
+	gd = __alloc_disk_node(sdp->request_queue, dev->numa_node,
 			       &sd_bio_compl_lkclass);
 	if (!gd)
 		goto out_free;
@@ -3468,8 +3469,9 @@ static int sd_probe(struct device *dev)
 			sd_printk(KERN_NOTICE, sdkp, "supports TCG Opal\n");
 	}
 
-	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
-		  sdp->removable ? "removable " : "");
+	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk, numa node %d\n",
+		  sdp->removable ? "removable " : "", dev->numa_node);
+
 	scsi_autopm_put_device(sdp);
 
 	return 0;
