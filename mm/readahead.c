@@ -19,6 +19,7 @@
 #include <linux/pagemap.h>
 #include <linux/syscalls.h>
 #include <linux/file.h>
+#include <linux/mount.h>
 #include <linux/mm_inline.h>
 #include <linux/blk-cgroup.h>
 #include <linux/fadvise.h>
@@ -179,6 +180,7 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
 	LIST_HEAD(page_pool);
 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
 	unsigned long i;
+	int nodeid = -1;
 
 	/*
 	 * Partway through the readahead operation, we will have added
@@ -191,6 +193,15 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
 	 * gfp_mask, but let's be explicit here.
 	 */
 	unsigned int nofs = memalloc_nofs_save();
+
+	/*
+	 * Check the numa node id of the block device
+	 */
+	if(ractl->file && ractl->file->f_path.mnt &&
+			ractl->file->f_path.mnt->mnt_sb &&
+			ractl->file->f_path.mnt->mnt_sb->s_bdev &&
+			ractl->file->f_path.mnt->mnt_sb->s_bdev->bd_disk)
+		nodeid = ractl->file->f_path.mnt->mnt_sb->s_bdev->bd_disk->node_id;
 
 	/*
 	 * Preallocate as many pages as we will need.
@@ -213,7 +224,12 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
 			continue;
 		}
 
-		page = __page_cache_alloc(gfp_mask);
+		/* alloc the page according to the block device numa node*/
+		if ( nodeid >= 0 && nodeid < MAX_NUMNODES )
+			page = __alloc_pages_node(nodeid, gfp_mask, 0);
+		else
+			page = __page_cache_alloc(gfp_mask);
+
 		if (!page)
 			break;
 		if (mapping->a_ops->readpages) {
