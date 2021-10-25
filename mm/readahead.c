@@ -22,6 +22,7 @@
 #include <linux/mm_inline.h>
 #include <linux/blk-cgroup.h>
 #include <linux/fadvise.h>
+#include <linux/mount.h>
 
 #include "internal.h"
 
@@ -164,11 +165,20 @@ unsigned int __do_page_cache_readahead(struct address_space *mapping,
 	unsigned int nr_pages = 0;
 	loff_t isize = i_size_read(inode);
 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
+	int nodeid = -1;
 
 	if (isize == 0)
 		goto out;
 
 	end_index = ((isize - 1) >> PAGE_SHIFT);
+
+	/*
+	 * Check the numa node id of the block device
+	 */
+	if(filp->f_path.mnt && filp->f_path.mnt->mnt_sb &&
+			filp->f_path.mnt->mnt_sb->s_bdev &&
+			filp->f_path.mnt->mnt_sb->s_bdev->bd_disk)
+		nodeid = filp->f_path.mnt->mnt_sb->s_bdev->bd_disk->node_id;
 
 	/*
 	 * Preallocate as many pages as we will need.
@@ -193,7 +203,12 @@ unsigned int __do_page_cache_readahead(struct address_space *mapping,
 			continue;
 		}
 
-		page = __page_cache_alloc(gfp_mask);
+		/* alloc the page according to the block device numa node*/
+		if ( nodeid >= 0 && nodeid < MAX_NUMNODES )
+			page = __alloc_pages_node(nodeid, gfp_mask, 0);
+		else
+			page = __page_cache_alloc(gfp_mask);
+
 		if (!page)
 			break;
 		page->index = page_offset;
