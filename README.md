@@ -1,10 +1,14 @@
 # ampere-lts-kernel
-Ampere back ported kernel patches for longterm 5.4 kernel and longterm 5.10 kernel.
+Ampere back ported kernel patches for Longterm 5.4 kernel and Longterm 5.10 kernel.
+* linux-5.4.y branch: https://github.com/AmpereComputing/ampere-lts-kernel/tree/linux-5.4.y
+* linux-5.10.y branch: https://github.com/AmpereComputing/ampere-lts-kernel/tree/linux-5.10.y
 
-Kernel patch on linux-5.4.y branch: https://github.com/AmpereComputing/ampere-lts-kernel/tree/linux-5.4.y
+Each patch is indexed by wiki:
+* 5.4 kernel patches: https://github.com/AmpereComputing/ampere-lts-kernel/wiki/5.4-LTS-kernel-patches
+* 5.10 kernel patches: https://github.com/AmpereComputing/ampere-lts-kernel/wiki/5.10-LTS-kernel-patches
 
-Kernel patch on linux-5.10.y branch: https://github.com/AmpereComputing/ampere-lts-kernel/tree/linux-5.10.y
+Patch details are also tracked as issue:
+* 5.4 kernel patch: https://github.com/AmpereComputing/ampere-lts-kernel/issues?q=label%3A%225.4+kernel%22
+* 5.10 kernel patch: https://github.com/AmpereComputing/ampere-lts-kernel/issues?q=label%3A%225.10+kernel%22
 
-Details please refer to wiki: https://github.com/AmpereComputing/ampere-lts-kernel/wiki/5.4-kernel-patches-(WIP) and https://github.com/AmpereComputing/ampere-lts-kernel/wiki/5.10-LTS-kernel-patches
-
-tests cases for ampere-lts-kernel: https://github.com/AmpereComputing/ampere-lts-kernel/tree/main/tests
+Tests cases for ampere-lts-kernel: https://github.com/AmpereComputing/ampere-lts-kernel/tree/main/tests
