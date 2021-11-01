@@ -422,7 +422,9 @@ static int arm_spe_sample(struct arm_spe_queue *speq)
 			return err;
 	}
 
-	if (spe->sample_memory && arm_spe__is_memory_event(record->type)) {
+	/* Force SPE_ST pass the condition check, since perf-c2c depends on ST. */
+	if (spe->sample_memory && (arm_spe__is_memory_event(record->type) ||
+					record->op == ARM_SPE_ST)) {
 		err = arm_spe__synth_mem_sample(speq, spe->memory_id, data_src);
 		if (err)
 			return err;
