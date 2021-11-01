@@ -317,8 +317,13 @@ static u64 arm_spe__synth_data_source(const struct arm_spe_record *record)
 
 	if (record->op == ARM_SPE_LD)
 		data_src.mem_op = PERF_MEM_OP_LOAD;
-	else
+	else {
 		data_src.mem_op = PERF_MEM_OP_STORE;
+		/* just for test perf-c2c:
+		 * in arm-spe store op has no data source, fake L1_HIT */
+		data_src.mem_lvl = PERF_MEM_LVL_L1;
+		data_src.mem_lvl |= PERF_MEM_LVL_HIT;
+	}
 
 	if (record->type & (ARM_SPE_LLC_ACCESS | ARM_SPE_LLC_MISS)) {
 		data_src.mem_lvl = PERF_MEM_LVL_L3;
