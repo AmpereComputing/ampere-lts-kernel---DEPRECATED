@@ -177,6 +177,9 @@ static int __init altra_cpuectlr_init(void)
 static void __exit altra_cpuectlr_exit(void)
 {
 	sysfs_remove_group(cpuectlr_el1_kobj, &cpuectlr_el1_group);
+	kobject_put(cpuectlr_el1_kobj);
+	if (cpuectlr_el1_addr)
+		iounmap(cpuectlr_el1_addr);
 }
 
 module_init(altra_cpuectlr_init);
