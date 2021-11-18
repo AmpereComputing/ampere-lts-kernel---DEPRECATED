@@ -79,3 +79,5 @@ cd ${SCRIPTPATH}/ampere_functions/perf_kvm_stat
 ./perf_kvm_stat.sh
 cd ${SCRIPTPATH}/ampere_functions/ras
 ./ras.sh
+cd ${SCRIPTPATH}/ampere_functions/cpuectlr_el1
+./altra_cpuectlr_el1.sh
