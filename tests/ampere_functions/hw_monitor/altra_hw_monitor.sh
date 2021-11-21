@@ -20,5 +20,23 @@ function hw_monitor_check_hwmon {
     done
 }
 
+function hw_monitor_check_perm {
+    hwmon_list=`find /sys/devices/platform -name "hwmon[0-9]"`
+    for hwmon in $hwmon_list
+    do
+        echo "check permission in $hwmon"
+        check_list=`find $hwmon -type f \( -name "power[0-9]_input" -o -name "energy*" \)`
+        for file in $check_list
+        do
+            perm=`stat -c '%a' $file`
+            [ "$perm" != "400" ] && echo "Wrong file permission in $file" && return 1
+        done
+    done
+    return 0
+}
+
 hw_monitor_check_hwmon
 check_return altra:hwmon
+
+hw_monitor_check_perm
+check_return altra:hwmon_perm
