@@ -45,7 +45,7 @@ fi
 if [ ! -f /opt/ltp/runltp ]; then
 	install_ltp_deps
 	rm -rf /opt/ltp
-	cd ${TMPDIR} && git clone --depth 1 https://github.com/linux-test-project/ltp.git || exit 1
+	cd ${TMPDIR} && git clone --depth 1 https://github.com/linux-test-project/ltp.git -b 20210524 || exit 1
 	cd ltp
 	# To fix broken aiodio tests, see https://patchwork.ozlabs.org/project/ltp/patch/20210601155427.996321-1-zlang@redhat.com/
 	git apply ${SCRIPTPATH}/patches/ltp-aiodio-help-aiodio-test-work-normally.diff || exit 1
