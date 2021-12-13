@@ -353,7 +353,70 @@ static u64 arm_spe__synth_data_source(const struct arm_spe_record *record)
 			data_src.mem_dtlb |= PERF_MEM_TLB_HIT;
 	}
 
+	data_src.mem_hw_dsrc = record->data_src;
+
 	return data_src.val;
+}
+
+static const char *hw_dsrc_altra_translate(union perf_mem_data_src data_src)
+{
+	/* arm-spe has valid hardware data source in load operation only */
+	if (data_src.mem_op == PERF_MEM_OP_STORE)
+		return "No Source";
+
+	switch (data_src.mem_hw_dsrc) {
+		case 0x0:
+			return "L1 data cache";
+		case 0x8:
+			return "L2 cache";
+		case 0x9:
+			return "Peer CPU";
+		case 0xa:
+			return "Local Cluster";
+		case 0xb:
+			return "System cache";
+		case 0xc:
+			return "Peer Cluster";
+		case 0xd:
+			return "Remote";
+		case 0xe:
+			return "DRAM";
+		default:
+			return "Invalid";
+	}
+}
+
+const char *hw_dsrc_translate(union perf_mem_data_src data_src)
+{
+	FILE *file;
+	size_t len;
+	long int cpu_impl = LONG_MAX;
+	const char *search = "CPU implementer";
+	char *start = NULL, *buf = NULL;
+
+	file = fopen("/proc/cpuinfo", "r");
+	if (!file)
+		return NULL;
+
+	while (getline(&buf, &len, file) > 0) {
+		if (!strncmp(buf, search, strlen(search))) {
+				start = strchr(buf, ':');
+				break;
+			}
+	}
+	fclose(file);
+
+	if (start)
+		cpu_impl = strtol(start + 1, NULL, 16);
+	free(buf);
+
+	switch (cpu_impl) {
+		case 0x41: // ARM or Altra
+			return hw_dsrc_altra_translate(data_src);
+		default:
+			break;
+	}
+	return NULL;
 }
 
 static int arm_spe_sample(struct arm_spe_queue *speq)
