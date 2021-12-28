@@ -11,6 +11,31 @@ TMPDIR="/tmp/ampere_tests_tmp"
 rm -rf ${TMPDIR}
 mkdir -pv ${TMPDIR}
 
+kversion=$(uname -r | awk -F . '{print $1 "." $2}')
+
+amp_functions_test() {
+	echo "=============================="
+	echo " Start ampere function tests"
+	echo "=============================="
+
+	cd ${SCRIPTPATH}/ampere_functions/hw_monitor
+	./altra_hw_monitor.sh
+	cd ${SCRIPTPATH}/ampere_functions/leds
+	./altra_leds.sh
+	cd ${SCRIPTPATH}/ampere_functions/pmu
+	./altra_pmu.sh
+	cd ${SCRIPTPATH}/ampere_functions/numa
+	./numa.sh
+	cd ${SCRIPTPATH}/ampere_functions/smmu_filter_fix
+	./smmu_filter_fix.sh
+	cd ${SCRIPTPATH}/ampere_functions/perf_kvm_stat
+	./perf_kvm_stat.sh
+	cd ${SCRIPTPATH}/ampere_functions/ras
+	./ras.sh
+	cd ${SCRIPTPATH}/ampere_functions/cpuectlr_el1
+	./altra_cpuectlr_el1.sh
+}
+
 install_ltp_deps() {
 	dist_name
 	case "${dist}" in
@@ -28,56 +53,43 @@ install_ltp_deps() {
 	esac
 }
 
-kversion=$(uname -r | awk -F . '{print $1 "." $2}')
+run_kselftest() {
+	if [ ! -f /opt/kselftests/version_${kversion} ]; then
+		apt-get install libhugetlbfs-dev jq ipvsadm conntrack netsniff-ng tshark smcroute libteam-utils -y
+		rm -rf /opt/kselftests && mkdir -pv /opt/kselftests
+		cd ${TMPDIR} && git clone --depth 1 https://github.com/AmpereComputing/ampere-lts-kernel.git -b linux-${kversion}.y || exit 1
+		cd /home/lts/sources/ampere-lts-kernel
+		# root don't have a .gitconfig
+		git config user.email "local@local.com"
+		git config user.name "local"
+		git am ${SCRIPTPATH}/patches/0001-kselftests-add-skipfile-check-in-test-runner.patch
+		cd tools/testing/selftests && ./kselftest_install.sh /opt/kselftests && touch /opt/kselftests/version_${kversion}
+		[ $? -ne 0 ] && echo "Install kselftests failed !!!" && exit 1
+		cp -f /opt/kselftests/net/forwarding/forwarding.config.sample /opt/kselftests/net/forwarding/forwarding.config
+	fi
 
-if [ ! -f /opt/kselftests/run_kselftest.sh ]; then
-	rm -rf /opt/kselftests && mkdir -pv /opt/kselftests
-	cd ${TMPDIR} && git clone --depth 1 https://github.com/AmpereComputing/ampere-lts-kernel.git -b linux-${kversion}.y || exit 1
-	cd ampere-lts-kernel
-	# root don't have a .gitconfig
-	git config user.email "local@local.com"
-	git config user.name "local"
-	git am ${SCRIPTPATH}/patches/0001-kselftests-add-skipfile-check-in-test-runner.patch
-	cd tools/testing/selftests && ./kselftest_install.sh /opt/kselftests
-	[ $? -ne 0 ] && echo "Install kselftests failed !!!" && exit 1
-fi
+	cd ${SCRIPTPATH}/lkft/kselftest
+	./kselftest.sh -p /opt/kselftests -g ${kversion} -S skipfile-lkft.yaml -s true
+	echo "Test lkft/kselftest finished, please check lkft/kselftest/output/result.csv"
+}
 
-if [ ! -f /opt/ltp/runltp ]; then
-	install_ltp_deps
-	rm -rf /opt/ltp
-	cd ${TMPDIR} && git clone --depth 1 https://github.com/linux-test-project/ltp.git -b 20210524 || exit 1
-	cd ltp
-	# To fix broken aiodio tests, see https://patchwork.ozlabs.org/project/ltp/patch/20210601155427.996321-1-zlang@redhat.com/
-	git apply ${SCRIPTPATH}/patches/ltp-aiodio-help-aiodio-test-work-normally.diff || exit 1
-	make autotools && ./configure --prefix=/opt/ltp --with-linux-dir=/lib/modules/`uname -r`/build && make -j && make install
-	[ $? -ne 0 ] && echo "Install ltp failed !!!" && exit 1
-fi
+run_ltp() {
+	if [ ! -f /opt/ltp/version_${kversion} ]; then
+		install_ltp_deps
+		rm -rf /opt/ltp
+		cd ${TMPDIR} && git clone --depth 1 https://github.com/linux-test-project/ltp.git -b 20210524 || exit 1
+		cd ltp
+		# To fix broken aiodio tests, see https://patchwork.ozlabs.org/project/ltp/patch/20210601155427.996321-1-zlang@redhat.com/
+		git apply ${SCRIPTPATH}/patches/ltp-aiodio-help-aiodio-test-work-normally.diff || exit 1
+		make autotools && ./configure --prefix=/opt/ltp --with-linux-dir=/lib/modules/`uname -r`/build && make -j && make install && touch /opt/ltp/version_${kversion}
+		[ $? -ne 0 ] && echo "Install ltp failed !!!" && exit 1
+	fi
 
-cd ${SCRIPTPATH}/lkft/kselftest
-./kselftest.sh -p /opt/kselftests -g ${kversion} -S skipfile-lkft.yaml -s true
-echo "Test lkft/kselftest finished, please check lkft/kselftest/output/result.csv"
+	cd ${SCRIPTPATH}/lkft/ltp
+	./ltp.sh -S skipfile-lkft.yaml -g ${kversion} -s true -i /opt/ltp -d `pwd`/ltptmp
+	echo "Test lkft/ltp finished, please check lkft/ltp/output/result.csv"
+}
 
-cd ${SCRIPTPATH}/lkft/ltp
-./ltp.sh -S skipfile-lkft.yaml -g ${kversion} -s true -i /opt/ltp -d `pwd`/ltptmp
-echo "Test lkft/ltp finished, please check lkft/ltp/output/result.csv"
-
-echo "=============================="
-echo " Start ampere function tests"
-echo "=============================="
-
-cd ${SCRIPTPATH}/ampere_functions/hw_monitor
-./altra_hw_monitor.sh
-cd ${SCRIPTPATH}/ampere_functions/leds
-./altra_leds.sh
-cd ${SCRIPTPATH}/ampere_functions/pmu
-./altra_pmu.sh
-cd ${SCRIPTPATH}/ampere_functions/numa
-./numa.sh
-cd ${SCRIPTPATH}/ampere_functions/smmu_filter_fix
-./smmu_filter_fix.sh
-cd ${SCRIPTPATH}/ampere_functions/perf_kvm_stat
-./perf_kvm_stat.sh
-cd ${SCRIPTPATH}/ampere_functions/ras
-./ras.sh
-cd ${SCRIPTPATH}/ampere_functions/cpuectlr_el1
-./altra_cpuectlr_el1.sh
+amp_functions_test
+run_kselftest
+run_ltp
