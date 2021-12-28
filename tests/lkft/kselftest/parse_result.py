@@ -17,6 +17,8 @@ with open(sys.argv[1], "r") as fp_in:
     for line in fp_in:
         if re.match("^# selftests: (.+: .+)$", line):
             tests_sum += 1
+            continue
+
         match_notok = re.match("^not ok \d+ selftests: (.+): (.+) # (.+)$", line)
         if match_notok:
             fp_out.write("{},{},{}\n".format(*match_notok.groups()))
@@ -24,6 +26,13 @@ with open(sys.argv[1], "r") as fp_in:
                 tests_skip += 1
             else:
                 tests_fail += 1
+            continue
+
+        # match 5.10 skip output
+        match_skip = re.match("^.*ok \d+ selftests: (.+): (.+) # SKIP$", line)
+        if match_skip:
+            fp_out.write("{},{},{}\n".format(*match_skip.groups(), "SKIP"))
+            tests_skip += 1
             continue
 
         match_ok = re.match("^.*ok \d+ selftests: (.+): (.+)$", line)
