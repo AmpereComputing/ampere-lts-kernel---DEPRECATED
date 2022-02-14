@@ -34,6 +34,8 @@ amp_functions_test() {
 	./ras.sh
 	cd ${SCRIPTPATH}/ampere_functions/cpuectlr_el1
 	./altra_cpuectlr_el1.sh
+	cd ${SCRIPTPATH}/ampere_functions/exec
+	./exec.sh
 }
 
 install_ltp_deps() {
