@@ -3,7 +3,7 @@
 . ../../lib/sh-test-lib
 OUTPUT="$(pwd)/output"
 RESULT_FILE="${OUTPUT}/result.txt"
-LOGFILE="${OUTPUT}/altra_leds.txt"
+LOGFILE="${OUTPUT}/altra_hwmon.txt"
 
 ! check_root && error_msg "You need to be root to run this script."
 create_out_dir "${OUTPUT}"
@@ -18,6 +18,7 @@ function hw_monitor_check_hwmon {
         temp=$(cat ${hwmon_path}/temp1_input)
         echo "${temp_label}(${mod_name}): ${temp}"
     done
+    return 0
 }
 
 function hw_monitor_check_perm {
@@ -34,6 +35,8 @@ function hw_monitor_check_perm {
     done
     return 0
 }
+
+# Verify patches in https://github.com/AmpereComputing/ampere-lts-kernel/issues/106"
 
 hw_monitor_check_hwmon
 check_return altra:hwmon

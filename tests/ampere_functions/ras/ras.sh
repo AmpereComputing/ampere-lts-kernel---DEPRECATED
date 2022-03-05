@@ -26,6 +26,7 @@ function ras_check_errors {
     return 0
 }
 
+# verify patch https://github.com/AmpereComputing/ampere-lts-kernel/issues/97
 function ras_check_ext_errors {
     dmesg -C
     modprobe einj || return 1

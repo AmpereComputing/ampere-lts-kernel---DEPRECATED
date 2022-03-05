@@ -24,7 +24,7 @@ function numa_device_alloc {
     echo
     bw=`cat ${tmplog} | grep -oP '(?<=READ: bw=)(\d+)(?=MiB/s )'`
     rm -f ${tmplog}
-    [ $bw -lt 2000 ] && return 1
+    [ $bw -lt 2000 ] && echo "Failed: '${bw} >= 2000 MiB/s' not true, please check #95 in github" && return 1
     return 0
 }
 

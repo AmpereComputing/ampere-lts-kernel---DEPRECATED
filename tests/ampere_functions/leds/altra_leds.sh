@@ -25,5 +25,6 @@ function leds_check_led {
     return 0
 }
 
+# Verify https://github.com/AmpereComputing/ampere-lts-kernel/commit/ab93b7ce6ea637a0d581431b012118cfe45fad7f"
 leds_check_led
 check_return altra:led

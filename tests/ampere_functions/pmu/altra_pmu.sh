@@ -21,26 +21,40 @@ function pmu_check_arm_cmn {
 function pmu_check_arm_dmc {
 	tmpresult=/tmp/pmu_check_arm_dmc.log
 	rm -f $tmpresult
-	events_list='dmc620_0/clk_cycle_count/,dmc620_8/clk_cycle_count/,dmc620_0/clkdiv2_rdwr/,dmc620_1/clkdiv2_rdwr/,dmc620_2/clkdiv2_rdwr/,dmc620_3/clkdiv2_rdwr/,dmc620_4/clkdiv2_rdwr/,dmc620_5/clkdiv2_rdwr/,dmc620_6/clkdiv2_rdwr/,dmc620_7/clkdiv2_rdwr/,dmc620_8/clkdiv2_rdwr/,dmc620_9/clkdiv2_rdwr/,dmc620_10/clkdiv2_rdwr/,dmc620_11/clkdiv2_rdwr/,dmc620_12/clkdiv2_rdwr/,dmc620_13/clkdiv2_rdwr/,dmc620_14/clkdiv2_rdwr/,dmc620_15/clkdiv2_rdwr/'
+
+	dmclist=()
+	for i in `perf list | grep dmc620 | grep clkdiv2_rdwr | awk '{print $1}'`
+	do
+		dmclist+=($i)
+	done
+	dmc_name_0=`echo ${dmclist[0]} | awk -F '/' '{print $1}'`
+	dmc_name_8=`echo ${dmclist[8]} | awk -F '/' '{print $1}'`
+
+	events_list="${dmc_name_0}/clk_cycle_count/,${dmc_name_8}/clk_cycle_count/"
+	for (( i=0; i<${#dmclist[@]}; i++ ));
+	do
+		events_list="${events_list},${dmclist[$i]}"
+	done
+
 	perf stat -I 1000 --interval-count 1 -D 200 -C 0 -e $events_list &> $tmpresult || return 1
 	grep "not supported" $tmpresult && return 1
 
-	dct_0_cycle=$(cat $tmpresult | grep "dmc620_0\/clk_cycle_count\/" | awk '{print $2}' | sed "s/,//g")
+	dct_0_cycle=$(cat $tmpresult | grep "${dmc_name_0}\/clk_cycle_count\/" | awk '{print $2}' | sed "s/,//g")
 	node_0_DIMM_freq_in_GHz=$(echo "scale=1; $dct_0_cycle/1000000000*2" | bc)
 	echo "Node 0 Mem Freq: ${node_0_DIMM_freq_in_GHz} GHz"
 
-	dct_8_cycle=$(cat $tmpresult | grep "dmc620_8\/clk_cycle_count\/" | awk '{print $2}' | sed "s/,//g")
+	dct_8_cycle=$(cat $tmpresult | grep "${dmc_name_8}\/clk_cycle_count\/" | awk '{print $2}' | sed "s/,//g")
 	node_1_DIMM_freq_in_GHz=$(echo "scale=1; $dct_8_cycle/1000000000*2" | bc)
 	echo "Node 1 Mem Freq: ${node_1_DIMM_freq_in_GHz} GHz"
 
 	chan_sum=$(for i in $(seq 0 7); do 
-		cat $tmpresult | grep "dmc620_${i}\/clkdiv2_rdwr\/" | awk '{print $2}' | sed "s/,//g" 
+		cat $tmpresult | grep "${dmclist[$i]}" | awk '{print $2}' | sed "s/,//g" 
 	done | awk '{s+=$1}END{print s}')
 	node_0_mem_bw=$(echo "scale=1; $chan_sum * 64 / 1000000" | bc)
 	echo "Node 0 Mem BW: $node_0_mem_bw MB/sec"
 
 	chan_sum=$(for i in $(seq 8 15); do
-		cat $tmpresult | grep "dmc620_${i}\/clkdiv2_rdwr\/" | awk '{print $2}' | sed "s/,//g" 
+		cat $tmpresult | grep "${dmclist[$i]}" | awk '{print $2}' | sed "s/,//g" 
 	done | awk '{s+=$1}END{print s}')
 	node_1_mem_bw=$(echo "scale=1; $chan_sum * 64 / 1000000" | bc)
 	echo "Node 1 Mem BW: $node_1_mem_bw MB/sec"
@@ -78,18 +92,18 @@ function pmu_check_arm_spe {
 }
 
 pmu_check_arm_cmn
-check_return altra_pmu:arm_cmn
+check_return altra:pmu:arm_cmn
 
 pmu_check_arm_dmc
-check_return altra_pmu:arm_dmc
+check_return altra:pmu:arm_dmc
 
 pmu_check_arm_dsu
-check_return altra_pmu:arm_dsu
+check_return altra:pmu:arm_dsu
 
 pmu_check_arm_smmuv3
-check_return altra_pmu:arm_smmuv3
+check_return altra:pmu:arm_smmuv3
 
 pmu_check_arm_spe
-check_return altra_pmu:arm_spe
+check_return altra:pmu:arm_spe
 
 rm -f /tmp/pmu_check_*
