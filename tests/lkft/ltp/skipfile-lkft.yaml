@@ -187,3 +187,5 @@ skiplist:
     tests:
       - stress_cd
       - stress_floppy
+      - read_all_sys
+

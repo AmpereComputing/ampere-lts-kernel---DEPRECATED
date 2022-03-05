@@ -60,7 +60,7 @@ run_kselftest() {
 		apt-get install libhugetlbfs-dev jq ipvsadm conntrack netsniff-ng tshark smcroute libteam-utils -y
 		rm -rf /opt/kselftests && mkdir -pv /opt/kselftests
 		cd ${TMPDIR} && git clone --depth 1 https://github.com/AmpereComputing/ampere-lts-kernel.git -b linux-${kversion}.y || exit 1
-		cd /home/lts/sources/ampere-lts-kernel
+		cd ampere-lts-kernel
 		# root don't have a .gitconfig
 		git config user.email "local@local.com"
 		git config user.name "local"

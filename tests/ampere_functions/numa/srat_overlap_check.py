@@ -12,10 +12,10 @@ def get_sysfs_node_size(idx):
 def MB(size):
     return size / 1024 / 1024
 
+# CONFIG_NODES_SPAN_OTHER_NODES is removed in v5.8
 ret = subprocess.run('cat /boot/config-`uname -r` | grep -q "CONFIG_NODES_SPAN_OTHER_NODES=y"', shell=True)
 if ret.returncode != 0:
     print("CONFIG_NODES_SPAN_OTHER_NODES is not set")
-    sys.exit(1)
 
 srat_out = subprocess.check_output('dmesg | grep "SRAT: Node"', shell=True).decode('utf-8')
 nodes_size = {}
