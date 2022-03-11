@@ -18,7 +18,9 @@ function numa_check_node {
 }
 
 function numa_device_alloc {
-    mount /dev/nvme1n1 /mnt/fiotest/
+    echo "Remote fio read test on /dev/nvme1n1p1. Make sure this NVME disk is on Node0"
+    umount /mnt/fiotest
+    mount /dev/nvme1n1p1 /mnt/fiotest/
     echo 3 > /proc/sys/vm/drop_caches
     tmplog=`mktemp`
     numactl -N 1 -m 1 fio --ioengine=libaio --randrepeat=0 --norandommap --thread --direct=0 --buffered=1 --group_reporting --name=seqdztest --ramp_time=5 --runtime=20 --time_based --numjobs=5 --iodepth=32 --directory=/mnt/fiotest --size=50G --rw=read --bs=256k --output=${tmplog}
