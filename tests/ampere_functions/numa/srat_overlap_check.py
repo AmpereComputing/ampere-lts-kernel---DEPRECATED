@@ -13,7 +13,8 @@ def MB(size):
     return size / 1024 / 1024
 
 # CONFIG_NODES_SPAN_OTHER_NODES is removed in v5.8
-ret = subprocess.run('cat /boot/config-`uname -r` | grep -q "CONFIG_NODES_SPAN_OTHER_NODES=y"', shell=True)
+# ret = subprocess.run('cat /boot/config-`uname -r` | grep -q "CONFIG_NODES_SPAN_OTHER_NODES=y"', shell=True)
+ret = subprocess.run('zcat /proc/config.gz | grep -q "CONFIG_NODES_SPAN_OTHER_NODES=y"', shell=True)
 if ret.returncode != 0:
     print("CONFIG_NODES_SPAN_OTHER_NODES is not set")
 

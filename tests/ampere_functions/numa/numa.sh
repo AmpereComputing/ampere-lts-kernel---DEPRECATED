@@ -8,7 +8,8 @@ LOGFILE="${OUTPUT}/altra_leds.txt"
 create_out_dir "${OUTPUT}"
 
 function numa_check_node {
-    cat /boot/config-`uname -r` | grep -q "CONFIG_NODES_SHIFT=6"
+    #cat /boot/config-`uname -r` | grep -q "CONFIG_NODES_SHIFT=6"
+    zcat /proc/config.gz | grep -q "CONFIG_NODES_SHIFT=6"
     [ $? -ne 0 ] && echo "CONFIG_NODES_SHIFT not set in current kernel" && return 1
     node_cnt=$(numactl -H | grep "node .* cpus:" | wc -l)
     info_msg "Found $node_cnt numa node"
