@@ -12,3 +12,6 @@ Patch details are also tracked as issue:
 * 5.10 kernel patch: https://github.com/AmpereComputing/ampere-lts-kernel/issues?q=label%3A%225.10+kernel%22
 
 Tests cases for ampere-lts-kernel: https://github.com/AmpereComputing/ampere-lts-kernel/tree/main/tests
+
+Patches about the user space, such as Crash tool:
+https://github.com/AmpereComputing/ampere-lts-kernel/wiki/The-patches-about-Crash-tool
