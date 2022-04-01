@@ -13,5 +13,9 @@ Patch details are also tracked as issue:
 
 Tests cases for ampere-lts-kernel: https://github.com/AmpereComputing/ampere-lts-kernel/tree/main/tests
 
-Patches about the user space, such as Crash tool:
-https://github.com/AmpereComputing/ampere-lts-kernel/wiki/The-patches-about-Crash-tool
+# Tools
+1.) Patches about the Crash tool:
+    https://github.com/AmpereComputing/ampere-lts-kernel/wiki/The-patches-about-Crash-tool
+
+2.) Patches about the lscpu:
+    
