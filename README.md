@@ -18,4 +18,5 @@ Tests cases for ampere-lts-kernel: https://github.com/AmpereComputing/ampere-lts
     https://github.com/AmpereComputing/ampere-lts-kernel/wiki/The-patches-about-Crash-tool
 
 2.) Patches about the lscpu:
+    https://github.com/AmpereComputing/ampere-lts-kernel/wiki/The-patches-about-lscpu
     
