@@ -90,6 +90,7 @@ phys_addr_t __ro_after_init arm64_dma_phys_limit;
 phys_addr_t __ro_after_init arm64_dma_phys_limit = PHYS_MASK + 1;
 #endif
 
+bool crash_low_mem_page_map __initdata;
 static bool crash_high_mem_reserved __initdata;
 static struct resource crashk_res_high;
 
@@ -147,6 +148,8 @@ static void __init reserve_crashkernel_high(void)
 		ret = parse_crashkernel_high(cmdline, 0, &crash_size, &crash_base);
 		if (ret || !crash_size)
 			return;
+	} else if (!crash_base) {
+		crash_low_mem_page_map = true;
 	}
 
 	crash_size = PAGE_ALIGN(crash_size);
