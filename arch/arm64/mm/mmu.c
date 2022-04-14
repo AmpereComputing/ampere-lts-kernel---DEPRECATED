@@ -531,7 +531,8 @@ static void __init map_mem(pgd_t *pgdp)
 	if (crash_mem_map &&
 	    (IS_ENABLED(CONFIG_ZONE_DMA) || IS_ENABLED(CONFIG_ZONE_DMA32)))
 		eflags = NO_BLOCK_MAPPINGS | NO_CONT_MAPPINGS;
-	else if (crashk_res.end)
+
+	if (crashk_res.end)
 		memblock_mark_nomap(crashk_res.start,
 				    resource_size(&crashk_res));
 #endif
