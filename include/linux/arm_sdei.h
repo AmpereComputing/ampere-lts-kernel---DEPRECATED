@@ -87,4 +87,5 @@ int notrace sdei_event_handler(struct pt_regs *regs,
 /* arch code may use this to retrieve the extra registers. */
 int sdei_api_event_context(u32 query, u64 *result);
 
+int sdei_api_event_complete_and_resume(u64 addr, u64 *result);
 #endif /* __LINUX_ARM_SDEI_H */

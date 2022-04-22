@@ -20,6 +20,21 @@ struct agdi_data {
 
 static int agdi_sdei_handler(u32 sdei_event, struct pt_regs *regs, void *arg)
 {
+	__label__ __here;
+	u64 addr, result;
+	int err;
+
+	/*
+	 * If the client does not complete the sdei event handling,
+	 * there are abnormal behaviors when booting kdump secondary kernel.
+	 * Kernel hangs at arm_smmu_driver_init().
+	 * Looks the firmware is not in a correct state.
+	 */
+	addr = (u64)&&__here;
+	err = sdei_api_event_complete_and_resume(addr, &result);
+	if (err)
+		pr_warn("AGDI: SDEI_EVENT_COMPLETE_AND_RESUME failed: %d\n", err);
+__here:
 	nmi_panic(regs, "Arm Generic Diagnostic Dump and Reset SDEI event issued");
 	return 0;
 }
