@@ -191,7 +191,7 @@ static void __init take_reserved_high_mem(unsigned long long *crash_base,
 
 static void __init free_reserved_high_mem(void)
 {
-	memblock_phys_free(crashk_res_high.start, resource_size(&crashk_res_high));
+	memblock_free(crashk_res_high.start, resource_size(&crashk_res_high));
 }
 
 /*
@@ -296,7 +296,7 @@ reserve_low:
 			crash_low_size = DEFAULT_CRASH_KERNEL_LOW_SIZE;
 
 		if (reserve_crashkernel_low(crash_low_size)) {
-			memblock_phys_free(crash_base, crash_size);
+			memblock_free(crash_base, crash_size);
 			return;
 		}
 	} else if (crash_high_mem_reserved) {
