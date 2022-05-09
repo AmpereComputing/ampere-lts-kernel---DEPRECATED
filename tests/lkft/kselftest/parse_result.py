@@ -1,21 +1,20 @@
 #!/bin/env python3
 
-import sys
+import argparse
 import re
+import sys
 
 
 def main() -> int:
-    if len(sys.argv) != 3:
-        print("Usage:\n\t{} kselftest.txt output.csv".format(sys.argv[0]))
-        sys.exit(1)
+    args = parse_args()
 
-    fp_out = open(sys.argv[2], "w")
+    fp_out = open(args.output_csv_file, "w")
 
     tests_sum = 0
     tests_ok = 0
     tests_skip = 0
     tests_fail = 0
-    with open(sys.argv[1], "r") as fp_in:
+    with open(args.kselftest_log, "r") as fp_in:
         for line in fp_in:
             if re.match("^# selftests: (.+: .+)$", line):
                 tests_sum += 1
@@ -49,6 +48,24 @@ def main() -> int:
     )
     fp_out.close()
     return 0
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "kselftest_log",
+        help="kselftest.txt log file",
+        metavar="kselftest.txt",
+    )
+    parser.add_argument(
+        "output_csv_file",
+        help="Name of the CSV file to save the output to",
+        metavar="output.csv",
+    )
+
+    args = parser.parse_args()
+    return args
 
 
 if "__main__" == __name__:
