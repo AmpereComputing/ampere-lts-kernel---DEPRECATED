@@ -8,45 +8,45 @@ import sys
 def main() -> int:
     args = parse_args()
 
-    fp_out = open(args.output_csv_file, "w")
+    with open(args.output_csv_file, "w") as csv_output:
+        tests_sum = 0
+        tests_ok = 0
+        tests_skip = 0
+        tests_fail = 0
+        with open(args.kselftest_log, "r") as fp_in:
+            for line in fp_in:
+                if re.match("^# selftests: (.+: .+)$", line):
+                    tests_sum += 1
+                    continue
 
-    tests_sum = 0
-    tests_ok = 0
-    tests_skip = 0
-    tests_fail = 0
-    with open(args.kselftest_log, "r") as fp_in:
-        for line in fp_in:
-            if re.match("^# selftests: (.+: .+)$", line):
-                tests_sum += 1
-                continue
+                match_notok = re.match(
+                    "^not ok \d+ selftests: (.+): (.+) # (.+)$", line
+                )
+                if match_notok:
+                    csv_output.write("{},{},{}\n".format(*match_notok.groups()))
+                    if "SKIP" in match_notok.group(3):
+                        tests_skip += 1
+                    else:
+                        tests_fail += 1
+                    continue
 
-            match_notok = re.match("^not ok \d+ selftests: (.+): (.+) # (.+)$", line)
-            if match_notok:
-                fp_out.write("{},{},{}\n".format(*match_notok.groups()))
-                if "SKIP" in match_notok.group(3):
+                # match 5.10 skip output
+                match_skip = re.match("^.*ok \d+ selftests: (.+): (.+) # SKIP$", line)
+                if match_skip:
+                    csv_output.write("{},{},{}\n".format(*match_skip.groups(), "SKIP"))
                     tests_skip += 1
-                else:
-                    tests_fail += 1
-                continue
+                    continue
 
-            # match 5.10 skip output
-            match_skip = re.match("^.*ok \d+ selftests: (.+): (.+) # SKIP$", line)
-            if match_skip:
-                fp_out.write("{},{},{}\n".format(*match_skip.groups(), "SKIP"))
-                tests_skip += 1
-                continue
+                match_ok = re.match("^.*ok \d+ selftests: (.+): (.+)$", line)
+                if match_ok:
+                    csv_output.write("{},{},{}\n".format(*match_ok.groups(), "OK"))
+                    tests_ok += 1
 
-            match_ok = re.match("^.*ok \d+ selftests: (.+): (.+)$", line)
-            if match_ok:
-                fp_out.write("{},{},{}\n".format(*match_ok.groups(), "OK"))
-                tests_ok += 1
-
-    fp_out.write(
-        "kselftests: total {} pass {} skip {} fail {}".format(
-            tests_sum, tests_ok, tests_skip, tests_fail
+        csv_output.write(
+            "kselftests: total {} pass {} skip {} fail {}".format(
+                tests_sum, tests_ok, tests_skip, tests_fail
+            )
         )
-    )
-    fp_out.close()
     return 0
 
 
