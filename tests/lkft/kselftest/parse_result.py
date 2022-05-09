@@ -13,7 +13,7 @@ def main() -> int:
         tests_ok = 0
         tests_skip = 0
         tests_fail = 0
-        with open(args.kselftest_log, "r") as fp_in:
+        with open(args.kselftest_log, "r", encoding="utf-8", errors="replace") as fp_in:
             for line in fp_in:
                 if re.match("^# selftests: (.+: .+)$", line):
                     tests_sum += 1
