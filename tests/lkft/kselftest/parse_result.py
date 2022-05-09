@@ -40,7 +40,9 @@ with open(sys.argv[1], "r") as fp_in:
             fp_out.write("{},{},{}\n".format(*match_ok.groups(), "OK"))
             tests_ok += 1
 
-fp_out.write("kselftests: total {} pass {} skip {} fail {}".format(
-        tests_sum, tests_ok, tests_skip, tests_fail))
+fp_out.write(
+    "kselftests: total {} pass {} skip {} fail {}".format(
+        tests_sum, tests_ok, tests_skip, tests_fail
+    )
+)
 fp_out.close()
-
