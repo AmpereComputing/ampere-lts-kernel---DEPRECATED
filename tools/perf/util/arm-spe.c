@@ -33,6 +33,7 @@
 #include "arm-spe.h"
 #include "arm-spe-decoder/arm-spe-decoder.h"
 #include "arm-spe-decoder/arm-spe-pkt-decoder.h"
+#include "../../arch/arm64/include/asm/cputype.h"
 
 #define MAX_TIMESTAMP (~0ULL)
 
@@ -358,6 +359,13 @@ static u64 arm_spe__synth_data_source(const struct arm_spe_record *record)
 	return data_src.val;
 }
 
+static const struct midr_range neoverse_spe[] = {
+	MIDR_ALL_VERSIONS(MIDR_NEOVERSE_N1),
+	MIDR_ALL_VERSIONS(MIDR_NEOVERSE_N2),
+	MIDR_ALL_VERSIONS(MIDR_NEOVERSE_V1),
+	{},
+};
+
 static const char *hw_dsrc_altra_translate(union perf_mem_data_src data_src)
 {
 	/* arm-spe has valid hardware data source in load operation only */
@@ -388,34 +396,18 @@ static const char *hw_dsrc_altra_translate(union perf_mem_data_src data_src)
 
 const char *hw_dsrc_translate(union perf_mem_data_src data_src)
 {
-	FILE *file;
-	size_t len;
-	long int cpu_impl = LONG_MAX;
-	const char *search = "CPU implementer";
-	char *start = NULL, *buf = NULL;
+	static u64 midr = 0;
 
-	file = fopen("/proc/cpuinfo", "r");
-	if (!file)
-		return NULL;
+	if (!midr) {
+		char cpuid[128];
 
-	while (getline(&buf, &len, file) > 0) {
-		if (!strncmp(buf, search, strlen(search))) {
-				start = strchr(buf, ':');
-				break;
-			}
+		if (get_cpuid(cpuid, sizeof(cpuid)))
+			return NULL;
+		midr = strtol(cpuid, NULL, 16);
 	}
-	fclose(file);
 
-	if (start)
-		cpu_impl = strtol(start + 1, NULL, 16);
-	free(buf);
-
-	switch (cpu_impl) {
-		case 0x41: // ARM or Altra
-			return hw_dsrc_altra_translate(data_src);
-		default:
-			break;
-	}
+	if (is_midr_in_range(midr, neoverse_spe))
+		return hw_dsrc_altra_translate(data_src);
 	return NULL;
 }
 
