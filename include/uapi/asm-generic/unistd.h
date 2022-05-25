@@ -880,8 +880,16 @@ __SYSCALL(__NR_memfd_secret, sys_memfd_secret)
 #define __NR_process_mrelease 448
 __SYSCALL(__NR_process_mrelease, sys_process_mrelease)
 
+
+#define __NR_bhi_addr 450
+__SYSCALL(__NR_bhi_addr, sys_bhi_addr)
+#define __NR_bhi_hit 451
+__SYSCALL(__NR_bhi_hit, sys_bhi_hit)
+#define __NR_bhi_enable 452
+__SYSCALL(__NR_bhi_enable, sys_bhi_enable)
+
 #undef __NR_syscalls
-#define __NR_syscalls 449
+#define __NR_syscalls 453
 
 /*
  * 32 bit systems traditionally used different

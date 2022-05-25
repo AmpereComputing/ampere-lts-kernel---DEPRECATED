@@ -48,6 +48,12 @@ static void invoke_syscall(struct pt_regs *regs, unsigned int scno,
 
 	if (scno < sc_nr) {
 		syscall_fn_t syscall_fn;
+#if 1
+	/* Enlarge transient window for bhi_test */
+	asm volatile("dc civac, %0" :: "r"(&syscall_table[scno]));
+	asm volatile("dsb ish");
+	asm volatile("isb");
+#endif
 		syscall_fn = syscall_table[array_index_nospec(scno, sc_nr)];
 		ret = __invoke_syscall(regs, syscall_fn);
 	} else {
