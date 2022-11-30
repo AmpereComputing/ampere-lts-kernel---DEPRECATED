@@ -1,3 +1,13 @@
+cd tools/trace-irqoff/
+make 
+sudo make install
+
+cd /proc/trade-irqoff
+ls
+distribute  enable  sampling_period  trace_latency
+
+I used mdelay in the code to simulate IRQ timeout.
+
 --- a/trace_irqoff.c
 +++ b/trace_irqoff.c
 @@ -700,10 +700,18 @@ static const struct proc_ops enable_fops = {
@@ -20,6 +30,10 @@
         return 0;
  }
 
+make
+sudo make remove
+sudo make install
+
 cd /proc/trace_irqoff/
 cat sampling_period
 10ms
@@ -40,6 +54,7 @@ softirq-off:
         10 -> 19         : 477100   |****************************************|
         20 -> 39         : 14559    |*                                       |
 
+Because I set 1000ms mdelay,the count between 640 to 1279 is 1.
 
 cat trace_latency
 trace_irqoff_latency: 50ms
