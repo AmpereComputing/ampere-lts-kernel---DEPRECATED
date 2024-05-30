@@ -1,4 +1,5 @@
-# ampere-lts-kernel
+# ampere-lts-kernel - DEPRECATED
+## This repository is deprecated and set to archive status. It will eventually be deleted.
 Ampere back ported kernel patches for Longterm 5.4 kernel and Longterm 5.10 kernel.
 * linux-5.4.y branch: https://github.com/AmpereComputing/ampere-lts-kernel/tree/linux-5.4.y
 * linux-5.10.y branch: https://github.com/AmpereComputing/ampere-lts-kernel/tree/linux-5.10.y
@@ -13,7 +14,7 @@ Patch details are also tracked as issue:
 
 Tests cases for ampere-lts-kernel: https://github.com/AmpereComputing/ampere-lts-kernel/tree/main/tests
 
-# Tools
+# Tools - DEPRECATED
 1.) Patches about the Crash tool:
     https://github.com/AmpereComputing/ampere-lts-kernel/wiki/The-patches-about-Crash-tool
 
