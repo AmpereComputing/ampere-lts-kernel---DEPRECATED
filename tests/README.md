@@ -1,3 +1,6 @@
+DEPRECATED
+This repository is deprecated and set to archive status. It will eventually be deleted.
+
 Test cases for ampere-lts-kernel.
 
 * lkft: Linaro's Linux Kernel Functional Testing test suites. Currently ported LTP and Kselftest scripts.
